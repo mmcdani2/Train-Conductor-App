@@ -29,9 +29,14 @@ if uploaded_images:
 # =========================
 # STEP 2: OCR Processing
 # =========================
+import re
+
 st.header("Step 2: Extract Names with OCR")
 
 extracted_names = []
+
+# Keywords to ignore
+ignored_keywords = {"Ranking", "Commander", "Points", "xXReign of TerrorXx", "[RTS1]"}
 
 if uploaded_images and len(uploaded_images) == 4:
     reader = easyocr.Reader(['en'], gpu=False)
@@ -42,14 +47,29 @@ if uploaded_images and len(uploaded_images) == 4:
             image_np = np.array(image)
             image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
             result = reader.readtext(image_cv, detail=0)
-            extracted_names.extend(result)
 
-    # Clean and deduplicate
-    extracted_names = [name.strip() for name in extracted_names if name.strip()]
+            for text in result:
+                cleaned = text.strip()
+                if not cleaned or any(keyword in cleaned for keyword in ignored_keywords):
+                    continue
+
+                # Match lines like: "1 PlayerName" or "10 JohnDoe"
+                match = re.match(r"^\s*(\d{1,2})\s+(.+)", cleaned)
+                if match:
+                    rank = int(match.group(1))
+                    name = match.group(2).strip()
+                    if 1 <= rank <= 10:
+                        # Remove [tags] or alliance labels
+                        name = re.sub(r"\[.*?\]", "", name)
+                        name = name.replace("xXReign of TerrorXx", "").strip()
+                        extracted_names.append(name)
+
+    # Deduplicate
     extracted_names = list(set(extracted_names))
 
-    st.subheader("🧾 OCR Name Pool")
+    st.subheader("🧾 OCR Name Pool (Ranks 1–10 Only)")
     st.write(extracted_names)
+
 
 # =========================
 # STEP 3: Load Squad Power (for Defender Filtering)
