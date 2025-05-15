@@ -43,7 +43,7 @@ st.header("Step 2: Extract Names with OCR")
 
 extracted_names = []
 
-if uploaded_images and len(uploaded_images) == 4:
+if uploaded_images and len(uploaded_images) >= 1:
     with st.spinner("🔍 Extracting names from screenshots..."):
         reader = easyocr.Reader(['en'], gpu=False)
 
