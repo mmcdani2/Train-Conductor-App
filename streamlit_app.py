@@ -31,7 +31,11 @@ if username and password:
 
             st.subheader("🛡️ Your Eligible Defenders")
             if defenders:
-                st.write(defenders)
+                with st.container():
+                    st.markdown(
+                        """
+                        <div style='max-height: 200px; overflow-y: auto; padding: 10px; background-color: #111111; border: 1px solid #444; border-radius: 5px;'>
+                        """ + "<br>".join(defenders) + "</div>", unsafe_allow_html=True)
             else:
                 st.info("No defenders listed yet.")
 
@@ -60,12 +64,20 @@ if username and password:
                     save_users(users)
                     st.session_state["defenders_confirmed"] = True
                     st.success("✅ Account created successfully. You are now logged in.")
-                    st.write("🛡️ Your Eligible Defenders")
-                    st.write(defenders)
+                    st.subheader("🛡️ Your Eligible Defenders")
+                    with st.container():
+                        st.markdown(
+                            """
+                            <div style='max-height: 200px; overflow-y: auto; padding: 10px; background-color: #111111; border: 1px solid #444; border-radius: 5px;'>
+                            """ + "<br>".join(defenders) + "</div>", unsafe_allow_html=True)
             else:
                 defenders = users[username].get("defenders", [])
-                st.write("🛡️ Your Eligible Defenders")
-                st.write(defenders)
+                st.subheader("🛡️ Your Eligible Defenders")
+                with st.container():
+                    st.markdown(
+                        """
+                        <div style='max-height: 200px; overflow-y: auto; padding: 10px; background-color: #111111; border: 1px solid #444; border-radius: 5px;'>
+                        """ + "<br>".join(defenders) + "</div>", unsafe_allow_html=True)
                 if st.button("Update Eligible Defenders"):
                     st.session_state["updating"] = True
 
