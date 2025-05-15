@@ -20,10 +20,10 @@ uploaded_images = st.file_uploader(
 )
 
 if uploaded_images:
-    if len(uploaded_images) != 4:
-        st.warning("⚠️ Please upload exactly 4 images.")
+    if len(uploaded_images) < 1:
+        st.warning("⚠️ Please upload exactly more than 1 image.")
     else:
-        st.success("✅ 4 screenshots uploaded.")
+        st.success("✅ screenshots uploaded.")
 
         # Create 4 side-by-side columns
         cols = st.columns(4)
@@ -43,7 +43,7 @@ st.header("Step 2: Extract Names with OCR")
 
 extracted_names = []
 
-if uploaded_images and len(uploaded_images) >= 1:
+if uploaded_images and len(uploaded_images) >= 1:  # allow testing with fewer than 4
     with st.spinner("🔍 Extracting names from screenshots..."):
         reader = easyocr.Reader(['en'], gpu=False)
 
@@ -56,30 +56,44 @@ if uploaded_images and len(uploaded_images) >= 1:
             result = reader.readtext(image_cv, detail=0)
             raw_text.extend([r.strip() for r in result if r.strip()])
 
-        # Display all OCR text for debugging
+        # Display full OCR output for debugging
         st.subheader("🔍 Raw OCR Text")
         st.write(raw_text)
 
-        # Filter: use rank number (1-10) and grab the next item as the name
+        # Extract names based on ranks
         ignored_keywords = {"Ranking", "Commander", "Points", "xXReign of TerrorXx", "[RTS1]"}
+        point_pattern = re.compile(r"^\d{1,3}(,\d{3})+$")  # e.g., 36,816,066
+
         for idx, val in enumerate(raw_text):
-            if val in map(str, range(1, 11)):  # check if it's a rank number
-                if idx + 1 < len(raw_text):
-                    possible_name = raw_text[idx + 1]
-                    if not any(k in possible_name for k in ignored_keywords):
-                        # Remove bracketed tags like [RTS1]
-                        name = re.sub(r"\[.*?\]", "", possible_name).strip()
-                        if name:
-                            extracted_names.append(name)
+            if val in map(str, range(1, 11)):  # Match rank numbers 1–10
+                # Look ahead 1–3 lines to find a valid name
+                for offset in range(1, 4):
+                    next_idx = idx + offset
+                    if next_idx >= len(raw_text):
+                        continue
+                    candidate = raw_text[next_idx].strip()
+                    if not candidate:
+                        continue
+                    if any(keyword in candidate for keyword in ignored_keywords):
+                        continue
+                    if point_pattern.match(candidate):
+                        continue
+                    if candidate.isdigit():
+                        continue
+
+                    # Clean up name (e.g., remove [RTS1])
+                    cleaned = re.sub(r"\[.*?\]", "", candidate).strip()
+                    if cleaned:
+                        extracted_names.append(cleaned)
+                        break  # take the first valid match after the rank
 
     extracted_names = list(set(extracted_names))
 
-    st.subheader("🧾 OCR Name Pool (Ranks 1–10 Only)")
+    st.subheader("📋 OCR Name Pool (Ranks 1–10 Only)")
     if extracted_names:
         st.write(extracted_names)
     else:
-        st.warning("No valid player names detected.")
-
+        st.warning("No valid player names found in the OCR data.")
 
 
 # =========================
