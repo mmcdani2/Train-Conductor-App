@@ -14,14 +14,14 @@ st.title("Train Conductor/VIP Selector")
 st.header("Step 1: Upload Your 4 Ranking Screenshots")
 
 uploaded_images = st.file_uploader(
-    "Upload exactly 4 screenshots (VS & Tech rankings)",
+    "Upload screenshots (VS & Tech rankings)",
     type=["png", "jpg", "jpeg"],
     accept_multiple_files=True
 )
 
 if uploaded_images:
     if len(uploaded_images) < 1:
-        st.warning("⚠️ Please upload exactly more than 1 image.")
+        st.warning("⚠️ Please upload more than 1 image.")
     else:
         st.success("✅ screenshots uploaded.")
 
