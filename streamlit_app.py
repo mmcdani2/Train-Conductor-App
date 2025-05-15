@@ -12,6 +12,10 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # ─── Initialize Supabase client ───────────────────────────────────────────────
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# Simple test: fetch first 5 users
+resp = supabase.table("users").select("*").limit(5).execute()
+st.write("👥 Users in Supabase:", resp.data)
+
 # ─── Streamlit UI ─────────────────────────────────────────────────────────────
 st.set_page_config(page_title="Sign Up", layout="centered")
 st.title("🆕 Create a New User Account")
