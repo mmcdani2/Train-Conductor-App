@@ -1,101 +1,63 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import cv2
-from PIL import Image
-import easyocr
-import re
+import random
 
-st.title("Train Conductor/VIP Selector")
+st.set_page_config(page_title="Train Conductor & Defender Selector", layout="wide")
+st.title("🚂 Train Conductor & Defender Selector")
 
-# =========================
-# STEP 1: Upload Screenshots
-# =========================
-st.header("Step 1: Upload Your 4 Ranking Screenshots")
+# --- Google Sheet CSV Export Links ---
+vs_csv_url = "https://docs.google.com/spreadsheets/d/1B2ctEGRJLHyIb-yvtr3TreGylwZabpEOjCyqrlefpSQ/export?format=csv&gid=0"  # Top 10 VS
+tech_csv_url = "https://docs.google.com/spreadsheets/d/1B2ctEGRJLHyIb-yvtr3TreGylwZabpEOjCyqrlefpSQ/export?format=csv&gid=600054968"  # Top 10 Tech
+defender_csv_url = "https://docs.google.com/spreadsheets/d/1B2ctEGRJLHyIb-yvtr3TreGylwZabpEOjCyqrlefpSQ/export?format=csv&gid=1824324559"  # Eligible Defenders
 
-uploaded_images = st.file_uploader(
-    "Upload screenshots (VS & Tech rankings)",
-    type=["png", "jpg", "jpeg"],
-    accept_multiple_files=True
-)
-
-if uploaded_images:
-    if len(uploaded_images) < 1:
-        st.warning("⚠️ Please upload more than 1 image.")
-    else:
-        st.success("✅ screenshots uploaded.")
-
-        # Create 4 side-by-side columns
-        cols = st.columns(4)
-
-        for idx, img_file in enumerate(uploaded_images):
-            image = Image.open(img_file)
-            thumbnail = image.copy()
-            thumbnail.thumbnail((200, 200))  # Max width/height in pixels
-            with cols[idx]:
-                st.image(thumbnail, caption=f"Screenshot {idx + 1}")
-
-
-# =========================
-# STEP 2: OCR Processing
-# =========================
-import easyocr
-import numpy as np
-import cv2
-from PIL import Image
-
-st.header("Step 2: Upload a Screenshot")
-
-uploaded_image = st.file_uploader("Upload your screenshot", type=["png", "jpg", "jpeg"])
-
-if uploaded_image:
-    image = Image.open(uploaded_image).convert("RGB")
-    image_np = np.array(image)
-    image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
-
-    reader = easyocr.Reader(['en'], gpu=False)
-
-    # Show full-image OCR result
-    st.subheader("🔍 Full Image OCR")
-    full_result = reader.readtext(image_cv, detail=0)
-    st.write(full_result)
-
-    # Show size for debugging
-    st.text(f"Image size: {image.size}")
-
-    # Crop test: commander name for Rank 1 (update these if needed)
-    x1, y1, x2, y2 = 250, 300, 720, 380  # Commander name for Rank 1 (estimate)
-    crop = image_cv[y1:y2, x1:x2]
-    st.image(crop, caption="Cropped Region (Commander Rank 1)")
-
-    st.subheader("🔍 OCR on Cropped Commander Box (Rank 1)")
-    crop_result = reader.readtext(crop, detail=0)
-    st.write(crop_result)
-
-
-# =========================
-# STEP 3: Load Squad Power (for Defender Filtering)
-# =========================
-st.header("Step 3: Filter Eligible Defenders")
+# --- Load Data ---
+@st.cache_data
+def load_csv(url):
+    return pd.read_csv(url)
 
 try:
-    squad_df = pd.read_csv("squad_power.csv")
-    squad_df["Name"] = squad_df["Name"].astype(str).str.strip()
+    vs_df = load_csv(vs_csv_url)
+    tech_df = load_csv(tech_csv_url)
+    defender_df = load_csv(defender_csv_url)
+    
+    st.success("✅ All Google Sheets loaded successfully!")
 
-    if extracted_names:
-        # Filter to names that appear in both OCR and 16M+ list
-        eligible_defenders = squad_df[
-            (squad_df["Squad Power"] >= 16000000) &
-            (squad_df["Name"].isin(extracted_names))
-        ]["Name"].tolist()
+    # --- Clean names ---
+    vs_names = vs_df["Name"].astype(str).str.strip()
+    tech_names = tech_df["Name"].astype(str).str.strip()
+    defender_names = defender_df["Name"].astype(str).str.strip()
 
-        st.subheader("🛡️ Eligible Defenders (16M+ & Top 10)")
-        if eligible_defenders:
-            st.write(eligible_defenders)
+    # --- Build eligible pools ---
+    eligible_conductors = pd.Series(list(set(vs_names) | set(tech_names))).dropna().unique()
+    eligible_defenders = defender_names.dropna().unique()
+
+    # --- Display Pools ---
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("🎖️ Eligible Conductors/VIPs")
+        st.write(eligible_conductors.tolist())
+    with col2:
+        st.subheader("🛡️ Eligible Defenders")
+        st.write(eligible_defenders.tolist())
+
+    # --- Selection Tools ---
+    st.divider()
+    st.subheader("🎲 Random Selection")
+
+    if st.button("Pick Random Conductor/VIP"):
+        if len(eligible_conductors) > 0:
+            winner = random.choice(eligible_conductors.tolist())
+            st.success(f"🎖️ Selected Conductor/VIP: **{winner}**")
         else:
-            st.warning("No eligible defenders found from OCR pool.")
-    else:
-        st.info("Waiting for OCR name pool to generate...")
+            st.warning("No eligible conductors found.")
+
+    if st.button("Pick Random Defender"):
+        if len(eligible_defenders) > 0:
+            defender = random.choice(eligible_defenders.tolist())
+            st.success(f"🛡️ Selected Defender: **{defender}**")
+        else:
+            st.warning("No eligible defenders found.")
 
 except Exception as e:
-    st.error("❌ Error loading squad_power.csv. Please ensure it exists and is formatted correctly.")
+    st.error("❌ Failed to load one or more Google Sheets. Check your links and permissions.")
+    st.code(str(e))
