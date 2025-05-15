@@ -39,52 +39,38 @@ if uploaded_images:
 # =========================
 # STEP 2: OCR Processing
 # =========================
-st.header("Step 2: Upload a Single Screenshot with Grid Layout")
-uploaded_image = st.file_uploader("Upload a screenshot (Commander list view)", type=["png", "jpg", "jpeg"])
+import easyocr
+import numpy as np
+import cv2
+from PIL import Image
+
+st.header("Step 2: Upload a Screenshot")
+
+uploaded_image = st.file_uploader("Upload your screenshot", type=["png", "jpg", "jpeg"])
 
 if uploaded_image:
     image = Image.open(uploaded_image).convert("RGB")
-
-    # Resize image to fixed width to normalize coordinates
-    fixed_width = 1080
-    w_percent = fixed_width / float(image.width)
-    new_height = int(float(image.height) * w_percent)
-    image = image.resize((fixed_width, new_height), Image.LANCZOS)
-
-    st.image(image, caption="Resized for coordinate accuracy", use_container_width=True)
-
     image_np = np.array(image)
     image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
     reader = easyocr.Reader(['en'], gpu=False)
 
-    # Manually calibrated on resized image dimensions (1080px wide)
-    base_y = 300
-    row_height = 85
-    rank_x = (85, 145)     # cropped ranking column
-    name_x = (250, 720)    # cropped commander name column
+    # Show full-image OCR result
+    st.subheader("🔍 Full Image OCR")
+    full_result = reader.readtext(image_cv, detail=0)
+    st.write(full_result)
 
-    rank_name_map = {}
+    # Show size for debugging
+    st.text(f"Image size: {image.size}")
 
-    for i in range(7):  # 7 rows (ranks 1–7)
-        y1 = base_y + i * row_height
-        y2 = y1 + row_height
+    # Crop test: commander name for Rank 1 (update these if needed)
+    x1, y1, x2, y2 = 250, 300, 720, 380  # Commander name for Rank 1 (estimate)
+    crop = image_cv[y1:y2, x1:x2]
+    st.image(crop, caption="Cropped Region (Commander Rank 1)")
 
-        rank_crop = image_cv[y1:y2, rank_x[0]:rank_x[1]]
-        name_crop = image_cv[y1:y2, name_x[0]:name_x[1]]
-
-        rank_text = reader.readtext(rank_crop, detail=0)
-        name_text = reader.readtext(name_crop, detail=0)
-
-        # Use only first detected word in each region
-        rank = rank_text[0].strip() if rank_text else None
-        name = name_text[0].strip() if name_text else None
-
-        if rank and name and rank.isdigit():
-            rank_name_map[rank] = name
-
-    st.subheader("📋 Rank-to-Name Mapping")
-    st.write(rank_name_map)
+    st.subheader("🔍 OCR on Cropped Commander Box (Rank 1)")
+    crop_result = reader.readtext(crop, detail=0)
+    st.write(crop_result)
 
 
 # =========================
