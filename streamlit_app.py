@@ -60,7 +60,6 @@ if username and password and (username in users or (confirm_password is not None
                 save_users(users)
                 st.session_state["updating"] = False
                 st.success("✅ Defender list updated!")
-                st.experimental_rerun()
 
     elif username not in users:
         # New user signup
