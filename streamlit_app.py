@@ -18,3 +18,23 @@ if uploaded_images:
         st.success("4 screenshots uploaded.")
         for idx, img_file in enumerate(uploaded_images):
             st.image(Image.open(img_file), caption=f"Screenshot {idx + 1}", use_container_width=True)
+
+import easyocr
+
+st.header("Step 2: Extract Names with OCR")
+
+if uploaded_images and len(uploaded_images) == 4:
+    reader = easyocr.Reader(['en'], gpu=False)
+    extracted_names = []
+
+    with st.spinner("Extracting names from screenshots..."):
+        for img_file in uploaded_images:
+            result = reader.readtext(img_file.read(), detail=0)
+            extracted_names.extend(result)
+
+    # Clean and deduplicate
+    extracted_names = [name.strip() for name in extracted_names if name.strip()]
+    extracted_names = list(set(extracted_names))  # deduplicate
+
+    st.subheader("OCR Name Pool")
+    st.write(extracted_names)
