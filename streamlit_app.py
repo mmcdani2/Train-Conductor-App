@@ -45,42 +45,33 @@ extracted_names = []
 
 if uploaded_images and len(uploaded_images) == 4:
     with st.spinner("🔍 Extracting names from screenshots..."):
-        reader = easyocr.Reader(['en'], gpu=False)  # Force CPU mode
+        reader = easyocr.Reader(['en'], gpu=False)
 
-        ignored_keywords = {"Ranking", "Commander", "Points", "xXReign of TerrorXx", "[RTS1]"}
-        rank_pattern = re.compile(r"^\s*(\d{1,2})\s+(.+)$")
-
+        raw_text = []
         for img_file in uploaded_images:
             image = Image.open(img_file).convert("RGB")
             image_np = np.array(image)
             image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
-            ocr_results = reader.readtext(image_cv, detail=0)
+            result = reader.readtext(image_cv, detail=0)
+            raw_text.extend([r.strip() for r in result if r.strip()])
 
-            st.subheader("🔍 Debug: Raw OCR Extracted Names")
-            st.write(extracted_names)
+        # Display all OCR text for debugging
+        st.subheader("🔍 Raw OCR Text")
+        st.write(raw_text)
 
-            st.subheader("🧾 Debug: Names in squad_power.csv")
-            st.write(squad_df["Name"].tolist())
+        # Filter: use rank number (1-10) and grab the next item as the name
+        ignored_keywords = {"Ranking", "Commander", "Points", "xXReign of TerrorXx", "[RTS1]"}
+        for idx, val in enumerate(raw_text):
+            if val in map(str, range(1, 11)):  # check if it's a rank number
+                if idx + 1 < len(raw_text):
+                    possible_name = raw_text[idx + 1]
+                    if not any(k in possible_name for k in ignored_keywords):
+                        # Remove bracketed tags like [RTS1]
+                        name = re.sub(r"\[.*?\]", "", possible_name).strip()
+                        if name:
+                            extracted_names.append(name)
 
-            for line in ocr_results:
-                text = line.strip()
-                if not text or any(keyword in text for keyword in ignored_keywords):
-                    continue
-
-                match = rank_pattern.match(text)
-                if match:
-                    rank = int(match.group(1))
-                    name = match.group(2).strip()
-
-                    if 1 <= rank <= 10:
-                        # Clean up name
-                        name = re.sub(r"\[.*?\]", "", name)  # remove [RTS1] or similar
-                        name = name.replace("xXReign of TerrorXx", "")
-                        name = name.strip()
-                        extracted_names.append(name)
-
-    # Deduplicate
     extracted_names = list(set(extracted_names))
 
     st.subheader("🧾 OCR Name Pool (Ranks 1–10 Only)")
@@ -88,6 +79,7 @@ if uploaded_images and len(uploaded_images) == 4:
         st.write(extracted_names)
     else:
         st.warning("No valid player names detected.")
+
 
 
 # =========================
