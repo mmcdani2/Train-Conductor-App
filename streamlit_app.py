@@ -40,43 +40,51 @@ if uploaded_images:
 # STEP 2: OCR Processing
 # =========================
 st.header("Step 2: Upload a Single Screenshot with Grid Layout")
-uploaded_image = st.file_uploader("Upload a single image with visible ranking/name columns", type=["png", "jpg", "jpeg"])
+uploaded_image = st.file_uploader("Upload a screenshot (Commander list view)", type=["png", "jpg", "jpeg"])
 
 if uploaded_image:
     image = Image.open(uploaded_image).convert("RGB")
+
+    # Resize image to fixed width to normalize coordinates
+    fixed_width = 1080
+    w_percent = fixed_width / float(image.width)
+    new_height = int(float(image.height) * w_percent)
+    image = image.resize((fixed_width, new_height), Image.LANCZOS)
+
+    st.image(image, caption="Resized for coordinate accuracy", use_container_width=True)
+
     image_np = np.array(image)
     image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
     reader = easyocr.Reader(['en'], gpu=False)
 
-    # Coordinate template for 7 rows (adjust as needed)
-    base_y = 270
-    row_height = 75
-    rank_col = (90, 160)       # x1, x2
-    name_col = (230, 630)      # x1, x2
+    # Manually calibrated on resized image dimensions (1080px wide)
+    base_y = 300
+    row_height = 85
+    rank_x = (85, 145)     # cropped ranking column
+    name_x = (250, 720)    # cropped commander name column
 
     rank_name_map = {}
 
-    for i in range(7):  # ranks 1 to 7
+    for i in range(7):  # 7 rows (ranks 1–7)
         y1 = base_y + i * row_height
         y2 = y1 + row_height
 
-        # Crop rank and name regions
-        rank_crop = image_cv[y1:y2, rank_col[0]:rank_col[1]]
-        name_crop = image_cv[y1:y2, name_col[0]:name_col[1]]
+        rank_crop = image_cv[y1:y2, rank_x[0]:rank_x[1]]
+        name_crop = image_cv[y1:y2, name_x[0]:name_x[1]]
 
         rank_text = reader.readtext(rank_crop, detail=0)
         name_text = reader.readtext(name_crop, detail=0)
 
-        # Basic cleanup
-        if rank_text and name_text:
-            rank = rank_text[0].strip()
-            name = name_text[0].strip()
+        # Use only first detected word in each region
+        rank = rank_text[0].strip() if rank_text else None
+        name = name_text[0].strip() if name_text else None
+
+        if rank and name and rank.isdigit():
             rank_name_map[rank] = name
 
     st.subheader("📋 Rank-to-Name Mapping")
     st.write(rank_name_map)
-
 
 
 # =========================
