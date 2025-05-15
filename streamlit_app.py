@@ -57,6 +57,12 @@ if uploaded_images and len(uploaded_images) == 4:
 
             ocr_results = reader.readtext(image_cv, detail=0)
 
+            st.subheader("🔍 Debug: Raw OCR Extracted Names")
+            st.write(extracted_names)
+
+            st.subheader("🧾 Debug: Names in squad_power.csv")
+            st.write(squad_df["Name"].tolist())
+
             for line in ocr_results:
                 text = line.strip()
                 if not text or any(keyword in text for keyword in ignored_keywords):
