@@ -52,19 +52,28 @@ if uploaded_images and len(uploaded_images) == 4:
     st.write(extracted_names)
 
 # =========================
-# STEP 3: Load Squad Power (for Defender Pool)
+# STEP 3: Load Squad Power (for Defender Filtering)
 # =========================
-st.header("Step 3: Load Defender Eligibility List")
+st.header("Step 3: Filter Eligible Defenders")
 
 try:
     squad_df = pd.read_csv("squad_power.csv")
     squad_df["Name"] = squad_df["Name"].astype(str).str.strip()
 
-    # Filter 16M+
-    eligible_defenders = squad_df[squad_df["Squad Power"] >= 16000000]["Name"].tolist()
+    if extracted_names:
+        # Filter to names that appear in both OCR and 16M+ list
+        eligible_defenders = squad_df[
+            (squad_df["Squad Power"] >= 16000000) &
+            (squad_df["Name"].isin(extracted_names))
+        ]["Name"].tolist()
 
-    # Show all eligible defenders
-    st.subheader("🛡️ 16M+ Squad Power Members")
-    st.write(eligible_defenders)
+        st.subheader("🛡️ Eligible Defenders (16M+ & Top 10)")
+        if eligible_defenders:
+            st.write(eligible_defenders)
+        else:
+            st.warning("No eligible defenders found from OCR pool.")
+    else:
+        st.info("Waiting for OCR name pool to generate...")
+
 except Exception as e:
-    st.error("❌ Error loading squad_power.csv. Please ensure the file exists and is formatted correctly.")
+    st.error("❌ Error loading squad_power.csv. Please ensure it exists and is formatted correctly.")
