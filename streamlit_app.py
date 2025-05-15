@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 import bcrypt
 
-# ─── Load env vars ────────────────────────────────────────────────────────────
+# ─── Load environment variables ────────────────────────────────────────────────
 load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
@@ -12,14 +12,23 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # ─── Initialize Supabase client ───────────────────────────────────────────────
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Simple test: fetch first 5 users
-resp = supabase.table("users").select("*").limit(5).execute()
-st.write("👥 Users in Supabase:", resp.data)
-
-# ─── Streamlit UI ─────────────────────────────────────────────────────────────
+# ─── Streamlit page config ────────────────────────────────────────────────────
 st.set_page_config(page_title="Sign Up", layout="centered")
 st.title("🆕 Create a New User Account")
 
+# ─── Supabase Health Check ─────────────────────────────────────────────────────
+try:
+    health = supabase.table("users").select("id,username").limit(1).execute()
+    if health.error:
+        st.sidebar.error("❌ Supabase Error: " + health.error.message)
+    else:
+        status = "✅ Connected" if health.data is not None else "⚠️ No data"
+        st.sidebar.markdown(f"**🔗 Supabase Status:** {status}")
+        st.sidebar.write("Sample response:", health.data)
+except Exception as e:
+    st.sidebar.error("❌ Connection failed:\n" + str(e))
+
+# ─── Sign-up form ───────────────────────────────────────────────────────────────
 with st.form("signup_form"):
     username   = st.text_input("Username")
     password   = st.text_input("Password", type="password")
@@ -30,7 +39,7 @@ with st.form("signup_form"):
     submit_btn = st.form_submit_button("Create Account")
 
     if submit_btn:
-        # ─── Basic validation ────────────────────────────────────────────────
+        # Basic validation
         if not username.strip():
             st.error("Please enter a username.")
         elif password != confirm or not password:
@@ -38,10 +47,10 @@ with st.form("signup_form"):
         elif not server.strip() or not alliance.strip():
             st.error("Server Number and Alliance Name are required.")
         else:
-            # ─── Hash the password ────────────────────────────────────────────
+            # Hash the password
             pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
-            # ─── Insert into Supabase ───────────────────────────────────────
+            # Insert into Supabase
             new_user = {
                 "username":      username.strip(),
                 "password_hash": pw_hash,
