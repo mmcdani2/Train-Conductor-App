@@ -25,7 +25,10 @@ if uploaded_images:
     else:
         st.success("✅ 4 screenshots uploaded.")
         for idx, img_file in enumerate(uploaded_images):
-            st.image(Image.open(img_file), caption=f"Screenshot {idx + 1}", use_container_width=True)
+            image = Image.open(img_file)
+            thumbnail = image.copy()
+            thumbnail.thumbnail((200, 200))  # Max width/height in pixels
+            st.image(thumbnail, caption=f"Screenshot {idx + 1}")
 
 # =========================
 # STEP 2: OCR Processing
