@@ -19,13 +19,11 @@ st.title("🆕 Create a New User Account")
 # ─── Supabase Health Check ─────────────────────────────────────────────────────
 try:
     resp = supabase.table("users").select("id,username").limit(1).execute()
-    if resp.status_code != 200:
-        st.sidebar.error(f"❌ Supabase error: {resp.data}")
-    else:
-        st.sidebar.markdown("**🔗 Supabase Status:** ✅ Connected")
-        st.sidebar.write("Sample response:", resp.data)
+    # If no exception, assume connected
+    st.sidebar.markdown("**🔗 Supabase Status:** ✅ Connected")
+    st.sidebar.write("Sample response:", resp.data)
 except Exception as e:
-    st.sidebar.error(f"❌ Connection failed:\n{e}")
+    st.sidebar.error(f"❌ Supabase connection failed:\n{e}")
 
 # ─── Sign-up form ───────────────────────────────────────────────────────────────
 with st.form("signup_form"):
@@ -57,10 +55,9 @@ with st.form("signup_form"):
                 "alliance":      alliance.strip(),
                 "unlocked":      unlocked
             }
-            insert = supabase.table("users").insert(new_user).execute()
-
-            if insert.status_code != 201:
-                st.error(f"Failed to create account: {insert.data}")
-            else:
+            try:
+                insert = supabase.table("users").insert(new_user).execute()
                 st.success("✅ Account created successfully!")
                 st.info("You can now log in with your credentials.")
+            except Exception as e:
+                st.error(f"Failed to create account: {e}")
