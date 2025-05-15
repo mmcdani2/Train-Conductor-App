@@ -24,11 +24,17 @@ if uploaded_images:
         st.warning("⚠️ Please upload exactly 4 images.")
     else:
         st.success("✅ 4 screenshots uploaded.")
+
+        # Create 4 side-by-side columns
+        cols = st.columns(4)
+
         for idx, img_file in enumerate(uploaded_images):
             image = Image.open(img_file)
             thumbnail = image.copy()
             thumbnail.thumbnail((200, 200))  # Max width/height in pixels
-            st.image(thumbnail, caption=f"Screenshot {idx + 1}")
+            with cols[idx]:
+                st.image(thumbnail, caption=f"Screenshot {idx + 1}")
+
 
 # =========================
 # STEP 2: OCR Processing
