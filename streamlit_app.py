@@ -17,4 +17,4 @@ if uploaded_images:
     else:
         st.success("4 screenshots uploaded.")
         for idx, img_file in enumerate(uploaded_images):
-            st.image(Image.open(img_file), caption=f"Screenshot {idx + 1}", use_column_width=True)
+            st.image(Image.open(img_file), caption=f"Screenshot {idx + 1}", use_container_width=True)
