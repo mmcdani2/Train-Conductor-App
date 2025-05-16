@@ -199,8 +199,7 @@ elif page == "Random Picker":
     user = st.session_state.user
     st.title("🌟 VIP & Conductor Picker")
     user_input = st.text_area("Paste up to 20 contestant names (one per line):")
-    contestants = [n.strip() for n in user_input.strip().split("
-") if n.strip()]
+    contestants = [n.strip() for n in user_input.strip().split("\n") if n.strip()]
     if st.button("Pick Random VIP & Conductor"):
         if not contestants:
             st.warning("Please enter at least one contestant.")
