@@ -9,7 +9,12 @@ from pages.defenders_page import defenders_page
 from pages.picker_page import picker_page
 
 # ─── HEADER ───
-st.set_page_config(page_title="Last War Train Picker", page_icon="⚔️", layout="centered")
+st.set_page_config(
+    page_title="Last War Train Picker",
+    page_icon="⚔️",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 # ─── INITIAL SETUP ───
 load_dotenv()
