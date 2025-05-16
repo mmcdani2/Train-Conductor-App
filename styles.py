@@ -3,13 +3,47 @@ import streamlit as st
 def apply_styles():
     st.markdown("""
     <style>
-      .css-18e3th9, .main > div { margin: 0 auto !important; max-width:100% !important; padding:0 1rem; }
-      body { display:flex; justify-content:center; align-items:center; height:100vh; background:#121212; margin:0; }
-      .card { width:100%; max-width:360px; background:#1e1e1e; padding:2rem; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,0.3); }
-      .card h1 { text-align:center; color:#fff; margin-bottom:1.5rem; font-size:1.75rem; }
-      .stTextInput>label, .stForm label { color:#ccc; }
-      .stTextInput, .stCheckbox, .stButton>button { width:100% !important; }
-      .back-button { margin-top:1rem; background:none !important; border:none !important; color:#88f !important; text-decoration:underline; width:auto !important; }
+      .css-18e3th9, .main > div {
+          margin: 0 auto !important;
+          max-width:100% !important;
+          padding:0 1rem;
+      }
+      body {
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+          background:#121212;
+          margin:0;
+      }
+      .card {
+          width:100%;
+          max-width:360px;
+          background:#1e1e1e;
+          padding:2rem;
+          border-radius:16px;
+          box-shadow:0 8px 24px rgba(0,0,0,0.3);
+      }
+      .card h1 {
+          text-align:center;
+          color:#fff;
+          margin-bottom:1.5rem;
+          font-size:1.75rem;
+      }
+      .stTextInput>label, .stForm label {
+          color:#ccc;
+      }
+      .stTextInput, .stCheckbox, .stButton>button {
+          width:100% !important;
+      }
+      .back-button {
+          margin-top:1rem;
+          background:none !important;
+          border:none !important;
+          color:#88f !important;
+          text-decoration:underline;
+          width:auto !important;
+      }
       .hamburger {
           position: fixed;
           top: 1rem;
@@ -40,7 +74,14 @@ def apply_styles():
           gap: 1rem;
           box-shadow: 2px 0 10px rgba(0,0,0,0.5);
       }
-      [data-testid="stSidebar"], [data-testid="stSidebarNav"], [data-testid="stSidebarContent"], section[data-testid="stSidebar"], header[data-testid="stHeader"] {
+
+      /* Disable Streamlit sidebar and interaction zones */
+      [data-testid="stSidebar"],
+      [data-testid="stSidebarNav"],
+      [data-testid="stSidebarContent"],
+      section[data-testid="stSidebar"],
+      header[data-testid="stHeader"],
+      [data-testid="collapsedControl"] {
           display: none !important;
           visibility: hidden !important;
           width: 0 !important;
