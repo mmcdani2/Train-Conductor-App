@@ -63,16 +63,7 @@ def login(user, pwd):
     return None
 
 def get_eligible_defenders(alliance):
-    return [
-        m["name"]
-        for m in supabase
-        .table("team_roster")
-        .select("name, eligible")
-        .eq("alliance", alliance)
-        .eq("eligible", True)
-        .execute()
-        .data
-    ]
+    return [m["name"] for m in supabase.table("team_roster").select("name, eligible").eq("alliance", alliance).eq("eligible", True).execute().data].strip() for d in supabase.table("defenders").select("name").eq("alliance", alliance).execute().data]
 
 def get_recent_picks(days=DAYS_LIMIT):
     cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
@@ -181,7 +172,7 @@ elif page == "Team Roster":
     if sort_option == "Name":
         roster.sort(key=lambda x: x["name"].lower())
     elif sort_option == "Eligibility":
-        roster.sort(key=lambda x: not x["eligible"])  # show eligible first
+        roster.sort(key=lambda x: not x["eligible"])
     else:
         rank_order = {"R5": 1, "R4": 2, "R3": 3, "R2": 4, "R1": 5}
         roster.sort(key=lambda x: rank_order.get(x["rank"], 99))
@@ -213,11 +204,17 @@ elif page == "Team Roster":
     else:
         for member in roster:
             with st.container():
-                col1, col2, col3, col4 = st.columns([4, 2, 2, 1])
+                col1, col2, col3, col4, col5 = st.columns([4, 2, 2, 2, 1])
                 col1.markdown(f"**{member['name']}**")
                 col2.markdown(f"Rank: {member['rank']}")
-                col3.markdown(f"Eligible: {'✅' if member['eligible'] else '❌'}")
-                if is_admin and col4.button("🗑️", key=f"del_{member['id']}"):
+                if is_admin:
+                    new_eligible = col3.checkbox("Eligible", value=member['eligible'], key=f"eligible_{member['id']}")
+                    if new_eligible != member['eligible']:
+                        supabase.table("team_roster").update({"eligible": new_eligible}).eq("id", member["id"]).execute()
+                        st.experimental_rerun()
+                else:
+                    col3.markdown(f"Eligible: {'✅' if member['eligible'] else '❌'}")
+                if is_admin and col5.button("🗑️", key=f"del_{member['id']}"):
                     supabase.table("team_roster").delete().eq("id", member["id"]).execute()
                     st.success(f"Removed {member['name']} from roster.")
                     st.rerun()
@@ -226,8 +223,8 @@ elif page == "Random Picker":
     user = st.session_state.user
     st.title("🌟 VIP & Conductor Picker")
     user_input = st.text_area("Paste up to 20 contestant names (one per line):")
-    contestants = [n.strip() for n in user_input.strip().split("\n") if n.strip()]
-
+    contestants = [n.strip() for n in user_input.strip().split("
+") if n.strip()]
     if st.button("Pick Random VIP & Conductor"):
         if not contestants:
             st.warning("Please enter at least one contestant.")
