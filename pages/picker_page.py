@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
+from utils.translate import t
 
 load_dotenv()
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
@@ -27,12 +28,13 @@ def insert_pick(name, role):
 
 def picker_page():
     user = st.session_state.user
-    st.title("🌟 VIP & Conductor Picker")
-    user_input = st.text_area("Paste up to 20 contestant names (one per line):")
+    st.title(t("vip_picker_title"))
+    user_input = st.text_area(t("input_label"))
     contestants = [n.strip() for n in user_input.strip().split("\n") if n.strip()]
-    if st.button("Pick Random VIP & Conductor"):
+
+    if st.button(t("pick_button")):
         if not contestants:
-            st.warning("Please enter at least one contestant.")
+            st.warning(t("no_contestants"))
             st.stop()
 
         recent_picks = get_recent_picks()
@@ -42,11 +44,11 @@ def picker_page():
             eligible_defenders = get_eligible_defenders()
             defenders_pool = [d for d in eligible_defenders if d.lower() not in recent_picks]
             if not defenders_pool:
-                st.error("No eligible defenders available who haven't been picked in the last 7 days.")
+                st.error(t("no_defenders"))
                 st.stop()
 
         if not contestants_pool:
-            st.error("No eligible contestants available who haven't been picked in the last 7 days.")
+            st.error(t("no_valid_contestants"))
             st.stop()
 
         attempts = 0
@@ -59,12 +61,12 @@ def picker_page():
                 break
             attempts += 1
         else:
-            st.error("Failed to find two different names after multiple attempts.")
+            st.error(t("same_name_error"))
             st.stop()
 
         if user.get("unlocked"):
             insert_pick(defender, "defender")
-            st.success(f"🛡️ Defender Pick: **{defender}**")
+            st.success(f"🛡️ {t('defender_pick')}: **{defender}**")
 
         insert_pick(contestant, "contestant")
-        st.success(f"🚂 Contestant Pick: **{contestant}**")
+        st.success(f"🚂 {t('contestant_pick')}: **{contestant}**")
