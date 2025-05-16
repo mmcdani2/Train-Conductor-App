@@ -99,64 +99,21 @@ if st.session_state.user:
     else:
         st.session_state.page = menu
 
-# ─── PROFILE PAGE ───
-elif st.session_state.page == "Profile":
-    user = st.session_state.user
+# ─── LOGIN PAGE ───
+if st.session_state.page == "Login":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown(f"<h1>Welcome, {user['username']}!</h1>", unsafe_allow_html=True)
-    st.markdown(f"**Server:** {user['server']}")
-    st.markdown(f"**Alliance:** {user['alliance']}")
-    st.markdown(f"**VIP Unlocked:** {'Yes' if user['unlocked'] else 'No'}")
-
-    vip_toggle = st.checkbox("VIP slot unlocked?", value=user["unlocked"])
-    if vip_toggle != user["unlocked"]:
-        supabase.table("users").update({"unlocked": vip_toggle}).eq("id", user["id"]).execute()
-        st.session_state.user["unlocked"] = vip_toggle
-        st.success("VIP setting updated. Please refresh or navigate to see changes.")
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ─── RANDOM PICKER PAGE ───
-elif st.session_state.page == "Random Picker":
-    user = st.session_state.user
-    st.title("🌟 VIP & Conductor Picker")
-    user_input = st.text_area("Paste up to 20 contestant names (one per line):")
-    contestants = [n.strip() for n in user_input.strip().split("\n") if n.strip()]
-    if st.button("Pick Random VIP & Conductor"):
-        if not contestants:
-            st.warning("Please enter at least one contestant.")
-            st.stop()
-
-        recent_picks = get_recent_picks()
-        contestants_pool = [c for c in contestants if c.lower() not in recent_picks]
-
-        if user.get("unlocked"):
-            eligible_defenders = get_eligible_defenders(user["alliance"])
-            defenders_pool = [d for d in eligible_defenders if d.lower() not in recent_picks]
-            if not defenders_pool:
-                st.error("No eligible defenders available who haven't been picked in the last 7 days.")
-                st.stop()
-
-        if not contestants_pool:
-            st.error("No eligible contestants available who haven't been picked in the last 7 days.")
-            st.stop()
-
-        attempts = 0
-        max_attempts = 10
-        while attempts < max_attempts:
-            if user.get("unlocked"):
-                defender = random.choice(defenders_pool)
-            contestant = random.choice(contestants_pool)
-            if not user.get("unlocked") or defender.lower() != contestant.lower():
-                break
-            attempts += 1
+    st.markdown('<h1>Last War Train Picker</h1>', unsafe_allow_html=True)
+    uname = st.text_input("Username", placeholder="you@example.com")
+    pwd = st.text_input("Password", type="password", placeholder="••••••")
+    col1, col2 = st.columns(2)
+    if col1.button("Log In"):
+        user = login(uname, pwd)
+        if user:
+            st.session_state.user = user
+            st.session_state.page = "Profile"
+            st.session_state.alliance = user["alliance"]
+            st.rerun()
         else:
-            st.error("Failed to find two different names after multiple attempts.")
-            st.stop()
-
-        if user.get("unlocked"):
-            insert_pick(defender, "defender")
-            st.success(f"🛡️ Defender Pick: **{defender}**")
-
-        insert_pick(contestant, "contestant")
-        st.success(f"🚂 Contestant Pick: **{contestant}**")
+            st.error("Invalid credentials")
+    col2.button("Create Account", on_click=lambda: st.session_state.__setitem__("page", "Create Account"), key="create_account_login")
+    st.markdown('</div>', unsafe_allow_html=True)
