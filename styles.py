@@ -44,19 +44,6 @@ def apply_styles():
           text-decoration:underline;
           width:auto !important;
       }
-      .hamburger {
-          position: fixed;
-          top: 1rem;
-          left: 1rem;
-          cursor: pointer;
-          z-index: 1001;
-          background: #333;
-          color: white;
-          font-size: 1.5rem;
-          border: none;
-          border-radius: 4px;
-          padding: 0.25rem 0.75rem;
-      }
       .menu {
           background-color: #1e1e1e;
           position: fixed;
@@ -72,7 +59,7 @@ def apply_styles():
           box-shadow: 2px 0 10px rgba(0,0,0,0.5);
       }
 
-      /* Disable Streamlit sidebar and interaction zones */
+      /* Hide Streamlit sidebar and its interaction zones */
       [data-testid="stSidebar"],
       [data-testid="stSidebarNav"],
       [data-testid="stSidebarContent"],
