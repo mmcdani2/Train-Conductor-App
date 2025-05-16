@@ -47,6 +47,7 @@ def signup(user, pwd, server, alliance, unlocked):
     pw_hash = bcrypt.hashpw(pwd.encode(), bcrypt.gensalt()).decode()
     payload = {
         "username": user,
+        "rank": new_rank,
         "password_hash": pw_hash,
         "server": server,
         "alliance": alliance,
@@ -62,7 +63,7 @@ def login(user, pwd):
     return None
 
 def get_eligible_defenders(alliance):
-    return [d["name"].strip() for d in supabase.table("defenders").select("name").eq("alliance", alliance).execute().data]
+    return [m["name"] for m in supabase.table("team_roster").select("name, eligible").eq("alliance", alliance).eq("eligible", True).execute().data].strip() for d in supabase.table("defenders").select("name").eq("alliance", alliance).execute().data]
 
 def get_recent_picks(days=DAYS_LIMIT):
     cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
@@ -88,7 +89,7 @@ st.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnect
 # ─── SIDEBAR NAVIGATION ───
 if st.session_state.user:
     user = st.session_state.user
-    menu_options = ["Profile", "Random Picker", "Log Out"]
+    menu_options = ["Profile", "Random Picker", "Team Roster", "Log Out"]
     if user.get("unlocked"):
         menu_options.insert(1, "Eligible Defenders")
     menu = st.sidebar.radio("📱 Navigation", menu_options)
@@ -104,12 +105,13 @@ page = st.session_state.page
 if page == "Login":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<h1>Last War Train Picker</h1>', unsafe_allow_html=True)
-    uname = st.text_input("Username", placeholder="Last War Username")
+    uname = st.text_input("Username", placeholder="you@example.com")
     pwd = st.text_input("Password", type="password", placeholder="••••••")
     col1, col2 = st.columns(2)
     if col1.button("Log In"):
         user = login(uname, pwd)
         if user:
+            st.session_state.rank = user.get("rank", "R1")
             st.session_state.user = user
             st.session_state.page = "Profile"
             st.session_state.alliance = user["alliance"]
@@ -122,7 +124,8 @@ if page == "Login":
 elif page == "Create Account":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<h1>Create Account</h1>', unsafe_allow_html=True)
-    new_u = st.text_input("New Username", placeholder="Last War Username")
+    new_u = st.text_input("New Username", placeholder="you@example.com")
+    new_rank = st.selectbox("Your Rank", ["R5", "R4", "R3", "R2", "R1"])
     new_p = st.text_input("New Password", type="password", placeholder="••••••")
     confirm = st.text_input("Confirm Password", type="password", placeholder="••••••")
     srv = st.text_input("Server Number", placeholder="e.g., 42")
@@ -156,50 +159,66 @@ elif page == "Profile":
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-elif page == "Eligible Defenders":
+elif page == "Team Roster":
     user = st.session_state.user
-    st.title("🛡️ Eligible Defenders")
-    st.markdown("### ➕ Add a New Defender")
-    with st.form("add_defender_form"):
-        name = st.text_input("Defender Name", placeholder="e.g. WarDaddy42")
-        hq_level = st.number_input("HQ Level", min_value=1, max_value=35, step=1)
-        submitted = st.form_submit_button("Add Defender")
-        if submitted:
-            if not name:
-                st.warning("Please enter a name.")
-            else:
-                supabase.table("defenders").insert({
-                    "name": name,
-                    "hq_level": hq_level,
-                    "user_id": user["id"],
-                    "alliance": user["alliance"]
-                }).execute()
-                st.success(f"{name} added successfully!")
-                st.rerun()
-    st.divider()
-    st.markdown("### 🧍 Current Defenders")
-    response = supabase.table("defenders").select("*") \
-        .eq("alliance", user["alliance"]) \
-        .order("created_at", desc=False).execute()
-    defenders = response.data
-    if defenders:
-        for d in defenders:
-            col1, col2 = st.columns([6, 1])
-            with col1:
-                st.markdown(f"**{d['name']}** | HQ: {d['hq_level']} | Added: {d['created_at'].split('T')[0]}")
-            with col2:
-                if st.button("❌", key=f"delete_{d['id']}"):
-                    supabase.table("defenders").delete().eq("id", d["id"]).execute()
-                    st.success(f"{d['name']} deleted.")
-                    st.rerun()
+    user_rank = st.session_state.rank
+    is_admin = user_rank in ["R4", "R5"]
+    st.title("👥 Team Roster")
+
+    sort_option = st.selectbox("Sort by:", ["Rank", "Name", "Eligibility"])
+    response = supabase.table("team_roster").select("*").eq("alliance", user["alliance"]).execute()
+    roster = response.data or []
+
+    if sort_option == "Name":
+        roster.sort(key=lambda x: x["name"].lower())
+    elif sort_option == "Eligibility":
+        roster.sort(key=lambda x: not x["eligible"])  # show eligible first
     else:
-        st.info("No defenders added yet.")
+        rank_order = {"R5": 1, "R4": 2, "R3": 3, "R2": 4, "R1": 5}
+        roster.sort(key=lambda x: rank_order.get(x["rank"], 99))
+
+    if is_admin:
+        if len(roster) >= 100:
+            st.warning("Roster limit reached (100). Delete entries to add more.")
+        else:
+            with st.form("add_member_form"):
+                name = st.text_input("Name")
+                rank = st.selectbox("Rank", ["R5", "R4", "R3", "R2", "R1"])
+                eligible = st.checkbox("Eligible for Defender")
+                if st.form_submit_button("Add to Roster"):
+                    if not name:
+                        st.warning("Name is required.")
+                    else:
+                        supabase.table("team_roster").insert({
+                            "name": name,
+                            "rank": rank,
+                            "eligible": eligible,
+                            "alliance": user["alliance"],
+                            "created_by": user["id"]
+                        }).execute()
+                        st.success(f"{name} added to the roster.")
+                        st.rerun()
+
+    if not roster:
+        st.info("No team members in your alliance's roster yet.")
+    else:
+        for member in roster:
+            with st.container():
+                col1, col2, col3, col4 = st.columns([4, 2, 2, 1])
+                col1.markdown(f"**{member['name']}**")
+                col2.markdown(f"Rank: {member['rank']}")
+                col3.markdown(f"Eligible: {'✅' if member['eligible'] else '❌'}")
+                if is_admin and col4.button("🗑️", key=f"del_{member['id']}"):
+                    supabase.table("team_roster").delete().eq("id", member["id"]).execute()
+                    st.success(f"Removed {member['name']} from roster.")
+                    st.rerun()
 
 elif page == "Random Picker":
     user = st.session_state.user
     st.title("🌟 VIP & Conductor Picker")
     user_input = st.text_area("Paste up to 20 contestant names (one per line):")
-    contestants = [n.strip() for n in user_input.strip().split("\n") if n.strip()]
+    contestants = [n.strip() for n in user_input.strip().split("
+") if n.strip()]
     if st.button("Pick Random VIP & Conductor"):
         if not contestants:
             st.warning("Please enter at least one contestant.")
