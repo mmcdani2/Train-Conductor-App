@@ -23,7 +23,7 @@ def profile_page():
 ### 📖 How to Use This App
 
 **Navigation Menu**
-- Click the ☰ icon in the top-left to open the menu
+- Click the > icon in the top-left to open the menu
 - Navigate to: **Profile**, **Eligible Defenders** (if VIP is unlocked), **Random Picker**, or **Log Out**
 
 **Random Picker**
