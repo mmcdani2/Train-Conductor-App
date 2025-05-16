@@ -104,7 +104,7 @@ page = st.session_state.page
 if page == "Login":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<h1>Last War Train Picker</h1>', unsafe_allow_html=True)
-    uname = st.text_input("Username", placeholder="you@example.com")
+    uname = st.text_input("Username", placeholder="Last War Username")
     pwd = st.text_input("Password", type="password", placeholder="••••••")
     col1, col2 = st.columns(2)
     if col1.button("Log In"):
@@ -122,7 +122,7 @@ if page == "Login":
 elif page == "Create Account":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<h1>Create Account</h1>', unsafe_allow_html=True)
-    new_u = st.text_input("New Username", placeholder="you@example.com")
+    new_u = st.text_input("New Username", placeholder="Last War Username")
     new_p = st.text_input("New Password", type="password", placeholder="••••••")
     confirm = st.text_input("Confirm Password", type="password", placeholder="••••••")
     srv = st.text_input("Server Number", placeholder="e.g., 42")
