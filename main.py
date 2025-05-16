@@ -29,6 +29,36 @@ st.markdown("""
   .stTextInput>label, .stForm label { color:#ccc; }
   .stTextInput, .stCheckbox, .stButton>button { width:100% !important; }
   .back-button { margin-top:1rem; background:none !important; border:none !important; color:#88f !important; text-decoration:underline; width:auto !important; }
+  .hamburger {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      cursor: pointer;
+      z-index: 1001;
+      background: none;
+      border: none;
+      padding: 0;
+  }
+  .hamburger div {
+      width: 30px;
+      height: 4px;
+      background-color: white;
+      margin: 6px 0;
+  }
+  .menu {
+      background-color: #1e1e1e;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100%;
+      padding: 2rem 1rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+  }
 </style>
 """, unsafe_allow_html=True)
 
@@ -81,19 +111,41 @@ if "page" not in st.session_state:
     st.session_state.page = "Login"
 if "user" not in st.session_state:
     st.session_state.user = None
+if "show_menu" not in st.session_state:
+    st.session_state.show_menu = False
+
+def toggle_menu():
+    st.session_state.show_menu = not st.session_state.show_menu
 
 # ─── CONNECTION STATUS ───
 st.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnected'}")
 
-# ─── SIDEBAR NAVIGATION ───
+# ─── HAMBURGER NAVIGATION ───
 if st.session_state.user:
-    menu = st.sidebar.radio("📱 Navigation", ["Profile", "Eligible Defenders", "Random Picker", "Log Out"])
-    if menu == "Log Out":
-        st.session_state.clear()
-        st.session_state.page = "Login"
-        st.rerun()
-    else:
-        st.session_state.page = menu
+    col1, _ = st.columns([1, 10])
+    with col1:
+        if st.button("☰", key="hamburger", on_click=toggle_menu):
+            pass
+
+    if st.session_state.show_menu:
+        st.markdown('<div class="menu">', unsafe_allow_html=True)
+        if st.button("👤 Profile"):
+            st.session_state.page = "Profile"
+            st.session_state.show_menu = False
+            st.rerun()
+        if st.button("🛡️ Eligible Defenders"):
+            st.session_state.page = "Eligible Defenders"
+            st.session_state.show_menu = False
+            st.rerun()
+        if st.button("🎲 Random Picker"):
+            st.session_state.page = "Random Picker"
+            st.session_state.show_menu = False
+            st.rerun()
+        if st.button("🚪 Log Out"):
+            st.session_state.clear()
+            st.session_state.page = "Login"
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # ─── LOGIN PAGE ───
 if st.session_state.page == "Login":
@@ -107,7 +159,7 @@ if st.session_state.page == "Login":
         if user:
             st.session_state.user = user
             st.session_state.page = "Profile"
-            st.session_state.alliance = user["alliance"]  # Store alliance for session-wide use
+            st.session_state.alliance = user["alliance"]
             st.rerun()
         else:
             st.error("Invalid credentials")
@@ -203,7 +255,7 @@ elif st.session_state.page == "Eligible Defenders":
                 st.success(f"{name} added successfully!")
                 st.rerun()
     st.divider()
-    st.markdown("### 🧍 Current Defenders")
+    st.markdown("### 🧙 Current Defenders")
     response = supabase.table("defenders").select("*") \
         .eq("alliance", user["alliance"]) \
         .order("created_at", desc=False).execute()
