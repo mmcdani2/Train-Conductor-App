@@ -16,6 +16,19 @@ load_dotenv()
 apply_styles()
 init_session_state()
 
+# Inject JS to handle toggleMenu message from HTML hamburger button
+st.markdown("""
+<script>
+  window.addEventListener("message", (event) => {
+    if (event.data.type === "toggleMenu") {
+      fetch("/", {method: "POST"}).then(() => {
+        window.location.reload();
+      });
+    }
+  });
+</script>
+""", unsafe_allow_html=True)
+
 # ─── CONNECTION STATUS ───
 from db.auth import health_check
 st.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnected'}")
