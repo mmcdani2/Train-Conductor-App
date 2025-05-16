@@ -8,7 +8,7 @@ supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_
 
 def profile_page():
     user = st.session_state.user
-    st.markdown(f"<h1>Welcome, {user['username']}!</h1>", unsafe_allow_html=True)
+    st.title(f"Welcome, {user['username']}!")
     st.markdown(f"**Server:** {user['server']}")
     st.markdown(f"**Alliance:** {user['alliance']}")
     st.markdown(f"**VIP Unlocked:** {'Yes' if user['unlocked'] else 'No'}")
