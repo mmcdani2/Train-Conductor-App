@@ -34,7 +34,6 @@ from db.auth import health_check
 st.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnected'}")
 
 # ─── HAMBURGER NAVIGATION ───
-# ─── HAMBURGER NAVIGATION ───
 if st.session_state.user:
     # Custom hamburger button using CSS class, completely bypassing Streamlit layout traps
     st.markdown(
@@ -62,7 +61,6 @@ if st.session_state.user:
             st.session_state.page = "Login"
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
-
 
 # ─── PAGE ROUTING ───
 page = st.session_state.page
