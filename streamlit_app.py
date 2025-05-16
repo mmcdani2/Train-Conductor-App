@@ -10,84 +10,103 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# ─── PAGE CONFIG ───────────────────────────────────────────────────────────────
 st.set_page_config(page_title="Train Conductor App", layout="wide")
-st.title("🚂 Train Conductor & Defender Selector")
+st.markdown("""
+<style>
+  .main > div {max-width: 600px; margin: auto;}
+  input, .stButton>button {width: 100% !important;}
+</style>
+""", unsafe_allow_html=True)
 
-# ─── HEALTH CHECK ───────────────────────────────────────────────────────────────
-try:
-    _ = supabase.table("users").select("id").limit(1).execute()
-    st.sidebar.success("🔗 Supabase: Connected")
-except Exception as e:
-    st.sidebar.error(f"❌ Supabase connection failed:\n{e}")
+# ─── HELPER FUNCTIONS ──────────────────────────────────────────────────────────
+def health_check():
+    try:
+        supabase.table("users").select("id").limit(1).execute()
+        return True
+    except:
+        return False
 
-# ─── AUTHENTICATION BRANCHING ────────────────────────────────────────────────────
+def signup(user, pwd, server, alliance, unlocked):
+    pw_hash = bcrypt.hashpw(pwd.encode(), bcrypt.gensalt()).decode()
+    payload = {"username": user, "password_hash": pw_hash,
+               "server": server, "alliance": alliance,
+               "unlocked": unlocked, "defenders": []}
+    supabase.table("users").insert(payload).execute()
+
+def login(user, pwd):
+    resp = supabase.table("users").select("*").eq("username", user).limit(1).execute()
+    if resp.data and bcrypt.checkpw(pwd.encode(), resp.data[0]["password_hash"].encode()):
+        return resp.data[0]
+    return None
+
+# ─── NAVIGATION ────────────────────────────────────────────────────────────────
+if "page" not in st.session_state:
+    st.session_state.page = "Login"
 if "user" not in st.session_state:
-    # --- Not logged in: show Login + Signup ---
-    st.subheader("🔐 Please log in or create an account")
+    st.session_state.user = None
 
-    login_col, signup_col = st.columns(2)
+# Always show status
+status = "Connected" if health_check() else "Disconnected"
+st.sidebar.markdown(f"**🔗 Supabase:** {status}")
 
-    with login_col:
-        st.markdown("#### 🔑 Log In")
-        u = st.text_input("Username", key="login_user")
-        p = st.text_input("Password", type="password", key="login_pass")
-        if st.button("Log In"):
-            resp = (
-                supabase
-                .table("users")
-                .select("*")
-                .eq("username", u)
-                .limit(1)
-                .execute()
-            )
-            if resp.data and len(resp.data) == 1:
-                row = resp.data[0]
-                if bcrypt.checkpw(p.encode(), row["password_hash"].encode()):
-                    st.session_state["user"] = row
-                    st.success("✅ Logged in!")
-                else:
-                    st.error("❌ Incorrect password")
-            else:
-                st.error("❌ User not found")
-
-    with signup_col:
-        st.markdown("#### 🆕 Create Account")
-        u2       = st.text_input("New Username", key="signup_user")
-        p2       = st.text_input("New Password", type="password", key="signup_pass")
-        p2_conf  = st.text_input("Confirm Password", type="password", key="signup_confirm")
-        server   = st.text_input("Server Number", key="signup_server")
-        alliance = st.text_input("Alliance Name", key="signup_alliance")
-        unlocked = st.checkbox("VIP slot unlocked?", key="signup_unlocked")
-        if st.button("Create Account"):
-            # basic validation
-            if not u2.strip():
-                st.error("Enter a username")
-            elif p2 != p2_conf or not p2:
-                st.error("Passwords must match and not be empty")
-            elif not server.strip() or not alliance.strip():
-                st.error("Server and Alliance are required")
-            else:
-                pw_hash = bcrypt.hashpw(p2.encode(), bcrypt.gensalt()).decode()
-                payload = {
-                    "username":      u2.strip(),
-                    "password_hash": pw_hash,
-                    "server":        server.strip(),
-                    "alliance":      alliance.strip(),
-                    "unlocked":      unlocked,
-                    "defenders":     []
-                }
-                try:
-                    supabase.table("users").insert(payload).execute()
-                    st.success("✅ Account created! Please log in.")
-                except Exception as e:
-                    st.error(f"Failed to create account: {e}")
-
+# Menu when logged in
+if st.session_state.user:
+    st.sidebar.header("📑 Menu")
+    st.session_state.page = st.sidebar.radio("Go to", ["Profile", "Random Picker", "Eligible Defenders"] )
 else:
-    # --- Logged in: show profile + next steps ---
-    user = st.session_state["user"]
-    st.subheader(f"👋 Welcome, {user['username']}!")
+    st.sidebar.header("👤 Account")
+    st.session_state.page = st.sidebar.radio("Go to", ["Login", "Create Account"] )
+
+# ─── PAGE: LOGIN ───────────────────────────────────────────────────────────────
+if st.session_state.page == "Login":
+    st.title("🔐 Login")
+    uname = st.text_input("Username", key="l_user")
+    pwd = st.text_input("Password", type="password", key="l_pwd")
+    if st.button("Log In"):
+        user = login(uname, pwd)
+        if user:
+            st.session_state.user = user
+            st.success("Logged in!")
+        else:
+            st.error("Invalid credentials")
+
+# ─── PAGE: CREATE ACCOUNT ─────────────────────────────────────────────────────
+elif st.session_state.page == "Create Account":
+    st.title("🆕 Create Account")
+    new_u = st.text_input("New Username", key="c_user")
+    new_p = st.text_input("New Password", type="password", key="c_pwd")
+    confirm = st.text_input("Confirm Password", type="password", key="c_conf")
+    srv = st.text_input("Server Number")
+    ally = st.text_input("Alliance Name")
+    unlocked = st.checkbox("VIP slot unlocked?", key="c_unlocked")
+    if st.button("Sign Up"):
+        if not new_u or new_p != confirm or not srv or not ally:
+            st.error("Fill all fields and match passwords.")
+        else:
+            signup(new_u, new_p, srv, ally, unlocked)
+            st.success("Account created! Please login.")
+
+# ─── PAGE: PROFILE ─────────────────────────────────────────────────────────────
+elif st.session_state.page == "Profile":
+    user = st.session_state.user
+    st.title(f"👤 Profile: {user['username']}")
     st.markdown(f"**Server:** {user['server']}")
     st.markdown(f"**Alliance:** {user['alliance']}")
-    st.markdown(f"**VIP Slot Unlocked:** {user['unlocked']}")
+    st.markdown(f"**VIP Unlocked:** {user['unlocked']} ")
 
-    st.markdown("— next we’ll add your VS/Tech inputs and random picks here —")
+# ─── PAGE: RANDOM PICKER ────────────────────────────────────────────────────────
+elif st.session_state.page == "Random Picker":
+    st.title("🎲 Random Picker")
+    # Placeholder
+    st.info("VS/Tech input and random selection will go here.")
+
+# ─── PAGE: ELIGIBLE DEFENDERS ───────────────────────────────────────────────────
+elif st.session_state.page == "Eligible Defenders":
+    st.title("🛡️ Eligible Defenders")
+    user = st.session_state.user
+    defenders = user.get("defenders", [])
+    if defenders:
+        st.write(defenders)
+    else:
+        st.info("No defenders configured.")
