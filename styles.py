@@ -61,17 +61,17 @@ def apply_styles():
 
       /* Hide Streamlit sidebar and its interaction zones */
       [data-testid="stSidebar"],
-      [data-testid="stSidebarNav"],
-      [data-testid="stSidebarContent"],
-      section[data-testid="stSidebar"],
-      header[data-testid="stHeader"],
-      [data-testid="collapsedControl"] {
-          display: none !important;
-          visibility: hidden !important;
-          width: 0 !important;
-          max-width: 0 !important;
-          min-width: 0 !important;
-          pointer-events: none !important;
-      }
+    [data-testid="stSidebarNav"],
+    [data-testid="stSidebarContent"],
+    section[data-testid="stSidebar"],
+    header[data-testid="stHeader"],
+    [data-testid="collapsedControl"] {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        max-width: 0 !important;
+        min-width: 0 !important;
+        pointer-events: none !important;
+}
     </style>
     """, unsafe_allow_html=True)
