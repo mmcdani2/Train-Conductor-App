@@ -202,7 +202,30 @@ elif page == "Profile":
         st.session_state.user["unlocked"] = vip_toggle
         st.success("VIP setting updated. Please refresh or navigate to see changes.")
 
+    st.markdown("### 📖 How to Use This App")
+    st.markdown(\"\"\"
+    **Navigation Menu**
+    - Click the ☰ icon in the top-left to open the menu
+    - Navigate to: **Profile**, **Eligible Defenders** (if VIP is unlocked), **Random Picker**, or **Log Out**
+
+    **Random Picker**
+    - Paste up to 20 names (one per line)
+    - The app selects 1 contestant and 1 eligible defender (if VIP is unlocked) otherwise it only selects 1 contestant
+    - Prevents people from being picked if they were chosen in the last 7 days
+
+    **Eligible Defenders**
+    - Add or remove powerful defenders associated with your alliance
+    - Recommend only choosing members that are the top 20% power level in your alliance
+    - Only visible if your account has train VIP slot unlocked
+
+    **Log Out**
+    - Ends your session
+
+    💡 Tip: Refresh the app if you encounter a UI issue or stuck state.
+    \"\"\")
+
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 elif page == "Eligible Defenders":
     user = st.session_state.user
