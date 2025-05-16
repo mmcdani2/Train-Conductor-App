@@ -65,6 +65,13 @@ def login(user, pwd):
 def get_eligible_defenders(alliance):
     return [
         m["name"]
+        for m in supabase.table("team_roster")
+        .select("name, eligible")
+        .eq("alliance", alliance)
+        .eq("eligible", True)
+        .execute()
+        .data
+    ]
         for m in supabase
         .table("team_roster")
         .select("name, eligible")
