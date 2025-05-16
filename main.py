@@ -203,7 +203,7 @@ elif page == "Profile":
         st.success("VIP setting updated. Please refresh or navigate to see changes.")
 
     st.markdown("### 📖 How to Use This App")
-    st.markdown(\"\"\"
+    st.markdown("""
     **Navigation Menu**
     - Click the ☰ icon in the top-left to open the menu
     - Navigate to: **Profile**, **Eligible Defenders** (if VIP is unlocked), **Random Picker**, or **Log Out**
@@ -222,7 +222,7 @@ elif page == "Profile":
     - Ends your session
 
     💡 Tip: Refresh the app if you encounter a UI issue or stuck state.
-    \"\"\")
+    """)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
