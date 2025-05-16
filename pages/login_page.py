@@ -2,6 +2,27 @@ import streamlit as st
 from db.auth import login, signup
 from utils.translate import t
 
+# Translation keys required for this page are now included in translate.py:
+# "app_title": "Last War Train Picker",
+# "username_label": "Username",
+# "username_placeholder": "Last War Username",
+# "password_label": "Password",
+# "login_button": "Log In",
+# "invalid_credentials": "Invalid credentials",
+# "create_account": "Create Account",
+# "create_account_title": "Create Account",
+# "new_username_label": "New Username",
+# "new_password_label": "New Password",
+# "confirm_password_label": "Confirm Password",
+# "server_label": "Server Number",
+# "alliance_label": "Alliance Name",
+# "alliance_placeholder": "Your Alliance",
+# "vip_checkbox": "VIP slot unlocked?",
+# "signup_button": "Sign Up",
+# "fill_fields_error": "Fill all fields and match passwords.",
+# "account_created": "Account created! Please log in.",
+# "back_to_login": "Back to Login"
+
 def login_page():
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown(f'<h1>{t("app_title")}</h1>', unsafe_allow_html=True)
