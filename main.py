@@ -16,32 +16,15 @@ load_dotenv()
 apply_styles()
 init_session_state()
 
-# Inject JS to handle toggleMenu message from HTML hamburger button
-st.markdown("""
-<script>
-  window.addEventListener("message", (event) => {
-    if (event.data.type === "toggleMenu") {
-      fetch("/", {method: "POST"}).then(() => {
-        window.location.reload();
-      });
-    }
-  });
-</script>
-""", unsafe_allow_html=True)
-
 # ─── CONNECTION STATUS ───
 from db.auth import health_check
 st.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnected'}")
 
 # ─── HAMBURGER NAVIGATION ───
 if st.session_state.user:
-    # Custom hamburger button using CSS class, completely bypassing Streamlit layout traps
-    st.markdown(
-        '<button class="hamburger" onclick="window.parent.postMessage({type: \'toggleMenu\'}, \'*\')">≡</button>',
-        unsafe_allow_html=True
-    )
+    if st.button("≡ Menu", key="custom_hamburger", on_click=toggle_menu):
+        pass
 
-    # Render the custom menu panel using session state
     if st.session_state.show_menu:
         st.markdown('<div class="menu">', unsafe_allow_html=True)
         if st.button("👤 Profile"):
