@@ -19,8 +19,8 @@ def profile_page():
         st.session_state.user["unlocked"] = vip_toggle
         st.success("VIP setting updated. Please refresh or navigate to see changes.")
 
-    with st.expander("📖 How to Use This App"):
-        st.markdown("""
+    st.markdown("### 📖 How to Use This App")
+    st.markdown("""
 **Navigation Menu**
 - Click the ☰ icon in the top-left to open the menu
 - Navigate to: **Profile**, **Eligible Defenders** (if VIP is unlocked), **Random Picker**, or **Log Out**
@@ -39,4 +39,4 @@ def profile_page():
 - Ends your session
 
 💡 Tip: Refresh the app if you encounter a UI issue or stuck state.
-        """)
+    """)
