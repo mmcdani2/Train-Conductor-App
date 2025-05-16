@@ -24,7 +24,7 @@ st.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnect
 if st.session_state.user:
     col1, _ = st.columns([1, 10])
     with col1:
-        if st.button("☰", key="hamburger", on_click=toggle_menu):
+        if st.button("≡", key="hamburger", on_click=toggle_menu):
             pass
 
     if st.session_state.show_menu:
