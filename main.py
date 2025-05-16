@@ -60,23 +60,9 @@ st.markdown("""
       box-shadow: 2px 0 10px rgba(0,0,0,0.5);
   }
 
-  /* ─── Force-disable Streamlit default sidebar ─── */
-  [data-testid="stSidebar"], 
-  [data-testid="stSidebarNav"],
-  [data-testid="stSidebarContent"],
-  .css-1d391kg,
-  .css-hxt7ib,
-  header[data-testid="stHeader"] {
+  /* ─── Disable Streamlit sidebar panel only ─── */
+  [data-testid="stSidebar"] {
       display: none !important;
-      visibility: hidden !important;
-      width: 0 !important;
-      max-width: 0 !important;
-      min-width: 0 !important;
-  }
-
-  .block-container {
-      padding-left: 1rem !important;
-      padding-right: 1rem !important;
   }
 </style>
 """, unsafe_allow_html=True)
