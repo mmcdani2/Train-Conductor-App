@@ -29,6 +29,8 @@ st.markdown("""
   .stTextInput>label, .stForm label { color:#ccc; }
   .stTextInput, .stCheckbox, .stButton>button { width:100% !important; }
   .back-button { margin-top:1rem; background:none !important; border:none !important; color:#88f !important; text-decoration:underline; width:auto !important; }
+
+  /* ─── Hamburger Menu ─── */
   .hamburger {
       position: fixed;
       top: 1rem;
@@ -59,8 +61,14 @@ st.markdown("""
       gap: 1rem;
       box-shadow: 2px 0 10px rgba(0,0,0,0.5);
   }
+
+  /* ─── HIDE STREAMLIT SIDEBAR ─── */
+  [data-testid="stSidebar"], section[data-testid="stSidebar"] {
+      display: none !important;
+  }
 </style>
 """, unsafe_allow_html=True)
+
 
 # ─── CONSTANTS ───
 DAYS_LIMIT = 7
