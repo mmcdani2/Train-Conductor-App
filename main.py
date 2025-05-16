@@ -16,20 +16,84 @@ load_dotenv()
 apply_styles()
 init_session_state()
 
+# ─── TRANSLATIONS ───
+translations = {
+    "English": {
+        "profile": "👤 Profile",
+        "eligible_defenders": "🛡️ Eligible Defenders",
+        "random_picker": "🎲 Random Picker",
+        "logout": "🚪 Log Out",
+        "connected": "🔗 Supabase: Connected",
+        "disconnected": "🔗 Supabase: Disconnected",
+        "language": "🌐 Language"
+    },
+    "Spanish": {
+        "profile": "👤 Perfil",
+        "eligible_defenders": "🛡️ Defensores Elegibles",
+        "random_picker": "🎲 Selector Aleatorio",
+        "logout": "🚪 Cerrar Sesión",
+        "connected": "🔗 Supabase: Conectado",
+        "disconnected": "🔗 Supabase: Desconectado",
+        "language": "🌐 Idioma"
+    },
+    "Portuguese": {
+        "profile": "👤 Perfil",
+        "eligible_defenders": "🛡️ Defensores Elegíveis",
+        "random_picker": "🎲 Seletor Aleatório",
+        "logout": "🚪 Sair",
+        "connected": "🔗 Supabase: Conectado",
+        "disconnected": "🔗 Supabase: Desconectado",
+        "language": "🌐 Idioma"
+    },
+    "Korean": {
+        "profile": "👤 프로필",
+        "eligible_defenders": "🛡️ 선택된 수비수",
+        "random_picker": "🎲 무작위 선택기",
+        "logout": "🚪 로그아웃",
+        "connected": "🔗 Supabase: 연결됨",
+        "disconnected": "🔗 Supabase: 연결되지 않음",
+        "language": "🌐 언어"
+    },
+    "Indonesian": {
+        "profile": "👤 Profil",
+        "eligible_defenders": "🛡️ Pembela yang Memenuhi Syarat",
+        "random_picker": "🎲 Pemilih Acak",
+        "logout": "🚪 Keluar",
+        "connected": "🔗 Supabase: Terhubung",
+        "disconnected": "🔗 Supabase: Tidak Terhubung",
+        "language": "🌐 Bahasa"
+    }
+}
+
+def t(key):
+    lang = st.session_state.get("language", "English")
+    return translations.get(lang, translations["English"]).get(key, key)
+
+# ─── LANGUAGE SELECTION ───
+if "language" not in st.session_state:
+    st.session_state.language = "English"
+
+st.sidebar.selectbox(
+    label=t("language"),
+    options=list(translations.keys()),
+    index=list(translations.keys()).index(st.session_state.language),
+    key="language"
+)
+
 # ─── CONNECTION STATUS ───
 from db.auth import health_check
-st.sidebar.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnected'}")
+st.sidebar.markdown(t("connected") if health_check() else t("disconnected"))
 
 # ─── SIDEBAR NAVIGATION ───
 if st.session_state.user:
     st.sidebar.title("Navigation")
-    if st.sidebar.button("👤 Profile"):
+    if st.sidebar.button(t("profile")):
         st.session_state.page = "Profile"
-    if st.session_state.user.get("unlocked") and st.sidebar.button("🛡️ Eligible Defenders"):
+    if st.session_state.user.get("unlocked") and st.sidebar.button(t("eligible_defenders")):
         st.session_state.page = "Eligible Defenders"
-    if st.sidebar.button("🎲 Random Picker"):
+    if st.sidebar.button(t("random_picker")):
         st.session_state.page = "Random Picker"
-    if st.sidebar.button("🚪 Log Out"):
+    if st.sidebar.button(t("logout")):
         st.session_state.clear()
         st.session_state.page = "Login"
         st.rerun()
