@@ -8,7 +8,6 @@ supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_
 
 def profile_page():
     user = st.session_state.user
-    st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown(f"<h1>Welcome, {user['username']}!</h1>", unsafe_allow_html=True)
     st.markdown(f"**Server:** {user['server']}")
     st.markdown(f"**Alliance:** {user['alliance']}")
@@ -24,7 +23,7 @@ def profile_page():
         st.markdown("""
 **Navigation Menu**
 - Click the ☰ icon in the top-left to open the menu
-- Navigate to: **Profile**, **Eligible Defenders** (if train VIP is unlocked), **Random Picker**, or **Log Out**
+- Navigate to: **Profile**, **Eligible Defenders** (if VIP is unlocked), **Random Picker**, or **Log Out**
 
 **Random Picker**
 - Paste up to 20 names (one per line)
@@ -41,5 +40,3 @@ def profile_page():
 
 💡 Tip: Refresh the app if you encounter a UI issue or stuck state.
         """)
-
-    st.markdown('</div>', unsafe_allow_html=True)
