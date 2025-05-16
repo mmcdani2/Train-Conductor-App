@@ -107,6 +107,7 @@ if st.session_state.page == "Login":
         if user:
             st.session_state.user = user
             st.session_state.page = "Profile"
+            st.session_state.alliance = user["alliance"]  # Store alliance for session-wide use
             st.rerun()
         else:
             st.error("Invalid credentials")
@@ -177,7 +178,7 @@ elif st.session_state.page == "Random Picker":
             st.stop()
         insert_pick(defender, "defender")
         insert_pick(contestant, "contestant")
-        st.success(f"🛡️ Defender Pick: **{defender}**")
+        st.success(f"🚡️ Defender Pick: **{defender}**")
         st.success(f"🚂 Contestant Pick: **{contestant}**")
 
 # ─── ELIGIBLE DEFENDERS PAGE ───
@@ -196,13 +197,16 @@ elif st.session_state.page == "Eligible Defenders":
                 supabase.table("defenders").insert({
                     "name": name,
                     "hq_level": hq_level,
-                    "user_id": user["id"]
+                    "user_id": user["id"],
+                    "alliance": user["alliance"]
                 }).execute()
                 st.success(f"{name} added successfully!")
                 st.rerun()
     st.divider()
-    st.markdown("### 🢍 Current Defenders")
-    response = supabase.table("defenders").select("*").eq("user_id", user["id"]).order("created_at", desc=False).execute()
+    st.markdown("### 🧍 Current Defenders")
+    response = supabase.table("defenders").select("*") \
+        .eq("alliance", user["alliance"]) \
+        .order("created_at", desc=False).execute()
     defenders = response.data
     if defenders:
         for d in defenders:
