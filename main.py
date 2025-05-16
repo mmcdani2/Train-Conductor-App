@@ -21,12 +21,15 @@ from db.auth import health_check
 st.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnected'}")
 
 # ─── HAMBURGER NAVIGATION ───
+# ─── HAMBURGER NAVIGATION ───
 if st.session_state.user:
-    col1, _ = st.columns([1, 10])
-    with col1:
-        if st.button("≡", key="hamburger", on_click=toggle_menu):
-            pass
+    # Custom hamburger button using CSS class, completely bypassing Streamlit layout traps
+    st.markdown(
+        '<button class="hamburger" onclick="window.parent.postMessage({type: \'toggleMenu\'}, \'*\')">≡</button>',
+        unsafe_allow_html=True
+    )
 
+    # Render the custom menu panel using session state
     if st.session_state.show_menu:
         st.markdown('<div class="menu">', unsafe_allow_html=True)
         if st.button("👤 Profile"):
@@ -46,6 +49,7 @@ if st.session_state.user:
             st.session_state.page = "Login"
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
+
 
 # ─── PAGE ROUTING ───
 page = st.session_state.page
