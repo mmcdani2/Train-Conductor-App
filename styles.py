@@ -50,15 +50,12 @@ def apply_styles():
           left: 1rem;
           cursor: pointer;
           z-index: 1001;
-          background: none;
+          background: #333;
+          color: white;
+          font-size: 1.5rem;
           border: none;
-          padding: 0;
-      }
-      .hamburger div {
-          width: 30px;
-          height: 4px;
-          background-color: white;
-          margin: 6px 0;
+          border-radius: 4px;
+          padding: 0.25rem 0.75rem;
       }
       .menu {
           background-color: #1e1e1e;
