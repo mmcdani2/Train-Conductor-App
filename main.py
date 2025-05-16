@@ -8,15 +8,13 @@ from pages.profile_page import profile_page
 from pages.defenders_page import defenders_page
 from pages.picker_page import picker_page
 
-
+# ─── HEADER ───
+st.set_page_config(page_title="Last War Train Picker", page_icon="⚔️", layout="centered")
 
 # ─── INITIAL SETUP ───
 load_dotenv()
 apply_styles()
 init_session_state()
-
-# ─── HEADER ───
-st.set_page_config(page_title="Last War Train Picker", page_icon="⚔️", layout="centered")
 
 # ─── CONNECTION STATUS ───
 from db.auth import health_check
