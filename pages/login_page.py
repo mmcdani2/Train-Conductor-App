@@ -1,13 +1,14 @@
 import streamlit as st
 from db.auth import login, signup
+from utils.translate import t
 
 def login_page():
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown('<h1>Last War Train Picker</h1>', unsafe_allow_html=True)
-    uname = st.text_input("Username", placeholder="Last War Username")
-    pwd = st.text_input("Password", type="password", placeholder="••••••")
+    st.markdown(f'<h1>{t("app_title")}</h1>', unsafe_allow_html=True)
+    uname = st.text_input(t("username_label"), placeholder=t("username_placeholder"))
+    pwd = st.text_input(t("password_label"), type="password", placeholder="••••••")
     col1, col2 = st.columns(2)
-    if col1.button("Log In"):
+    if col1.button(t("login_button")):
         user = login(uname, pwd)
         if user:
             st.session_state.user = user
@@ -15,27 +16,27 @@ def login_page():
             st.session_state.alliance = user["alliance"]
             st.rerun()
         else:
-            st.error("Invalid credentials")
-    col2.button("Create Account", on_click=lambda: st.session_state.__setitem__("page", "Create Account"), key="create_account_login")
+            st.error(t("invalid_credentials"))
+    col2.button(t("create_account"), on_click=lambda: st.session_state.__setitem__("page", "Create Account"), key="create_account_login")
     st.markdown('</div>', unsafe_allow_html=True)
 
 def create_account_page():
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown('<h1>Create Account</h1>', unsafe_allow_html=True)
-    new_u = st.text_input("New Username", placeholder="Last War Username")
-    new_p = st.text_input("New Password", type="password", placeholder="••••••")
-    confirm = st.text_input("Confirm Password", type="password", placeholder="••••••")
-    srv = st.text_input("Server Number", placeholder="e.g., 42")
-    ally = st.text_input("Alliance Name", placeholder="Your Alliance")
-    unlocked = st.checkbox("VIP slot unlocked?")
+    st.markdown(f'<h1>{t("create_account_title")}</h1>', unsafe_allow_html=True)
+    new_u = st.text_input(t("new_username_label"), placeholder=t("username_placeholder"))
+    new_p = st.text_input(t("new_password_label"), type="password", placeholder="••••••")
+    confirm = st.text_input(t("confirm_password_label"), type="password", placeholder="••••••")
+    srv = st.text_input(t("server_label"), placeholder="e.g., 42")
+    ally = st.text_input(t("alliance_label"), placeholder=t("alliance_placeholder"))
+    unlocked = st.checkbox(t("vip_checkbox"))
     col1, col2 = st.columns(2)
-    if col1.button("Sign Up", key="sign_up_button"):
+    if col1.button(t("signup_button"), key="sign_up_button"):
         if not new_u or new_p != confirm or not srv or not ally:
-            st.error("Fill all fields and match passwords.")
+            st.error(t("fill_fields_error"))
         else:
             signup(new_u, new_p, srv, ally, unlocked)
-            st.success("Account created! Please log in.")
+            st.success(t("account_created"))
             st.session_state.page = "Login"
             st.rerun()
-    col2.button("Back to Login", on_click=lambda: st.session_state.__setitem__("page", "Login"), key="back_to_login")
+    col2.button(t("back_to_login"), on_click=lambda: st.session_state.__setitem__("page", "Login"), key="back_to_login")
     st.markdown('</div>', unsafe_allow_html=True)
