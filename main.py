@@ -18,15 +18,17 @@ apply_styles()
 init_session_state()
 
 # ─── LANGUAGE SELECTION ───
-if "language" not in st.session_state:
-    st.session_state.language = "English"
-
-st.sidebar.selectbox(
+# ─── LANGUAGE SELECTION ───
+prev_lang = st.session_state.get("language", "English")
+lang = st.sidebar.selectbox(
     label=t("language"),
     options=["English", "Spanish", "Portuguese", "Korean", "Indonesian"],
-    index=["English", "Spanish", "Portuguese", "Korean", "Indonesian"].index(st.session_state.language),
+    index=["English", "Spanish", "Portuguese", "Korean", "Indonesian"].index(prev_lang),
     key="language"
 )
+if lang != prev_lang:
+    st.rerun()
+
 
 # ─── CONNECTION STATUS ───
 from db.auth import health_check
