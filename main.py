@@ -99,7 +99,7 @@ if st.session_state.user:
 if st.session_state.page == "Login":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<h1>Last War Train Picker</h1>', unsafe_allow_html=True)
-    uname = st.text_input("Username", placeholder="you@example.com")
+    uname = st.text_input("Username", placeholder="Your Exact Username - Case Sensitive")
     pwd = st.text_input("Password", type="password", placeholder="••••••")
     col1, col2 = st.columns(2)
     if col1.button("Log In"):
