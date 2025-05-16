@@ -10,7 +10,6 @@ from pages.picker_page import picker_page
 
 # ─── HEADER ───
 st.set_page_config(page_title="Last War Train Picker", page_icon="⚔️", layout="centered")
-apply_styles()
 
 # ─── INITIAL SETUP ───
 load_dotenv()
