@@ -4,6 +4,10 @@ from styles import apply_styles
 from utils.state import init_session_state, toggle_menu
 from db.auth import login
 from pages.login_page import login_page, create_account_page
+from pages.profile_page import profile_page
+from pages.defenders_page import defenders_page
+from pages.picker_page import picker_page
+
 
 
 # ─── INITIAL SETUP ───
