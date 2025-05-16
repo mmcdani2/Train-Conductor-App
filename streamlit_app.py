@@ -1,25 +1,41 @@
 import streamlit as st
+import random
+from datetime import datetime, timedelta
 from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
 import bcrypt
 
-# ─── ENV & CLIENT SETUP ─────────────────────────────────────────────────────────
+# ─── ENV & CLIENT SETUP ───
 load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# ─── PAGE CONFIG ───────────────────────────────────────────────────────────────
-st.set_page_config(page_title="Train Conductor App", layout="wide")
+# ─── PAGE CONFIG ───
+st.set_page_config(
+    page_title="Last War Train Picker",
+    page_icon="⚔️",
+    layout="centered"
+)
+
+# ─── STYLES ───
 st.markdown("""
 <style>
-  .main > div {max-width: 600px; margin: auto;}
-  input, .stButton>button {width: 100% !important;}
+  .css-18e3th9, .main > div { margin: 0 auto !important; max-width:100% !important; padding:0 1rem; }
+  body { display:flex; justify-content:center; align-items:center; height:100vh; background:#121212; margin:0; }
+  .card { width:100%; max-width:360px; background:#1e1e1e; padding:2rem; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+  .card h1 { text-align:center; color:#fff; margin-bottom:1.5rem; font-size:1.75rem; }
+  .stTextInput>label, .stForm label { color:#ccc; }
+  .stTextInput, .stCheckbox, .stButton>button { width:100% !important; }
+  .back-button { margin-top:1rem; background:none !important; border:none !important; color:#88f !important; text-decoration:underline; width:auto !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ─── HELPER FUNCTIONS ──────────────────────────────────────────────────────────
+# ─── CONSTANTS ───
+DAYS_LIMIT = 7
+
+# ─── HELPERS ───
 def health_check():
     try:
         supabase.table("users").select("id").limit(1).execute()
@@ -29,9 +45,14 @@ def health_check():
 
 def signup(user, pwd, server, alliance, unlocked):
     pw_hash = bcrypt.hashpw(pwd.encode(), bcrypt.gensalt()).decode()
-    payload = {"username": user, "password_hash": pw_hash,
-               "server": server, "alliance": alliance,
-               "unlocked": unlocked, "defenders": []}
+    payload = {
+        "username": user,
+        "password_hash": pw_hash,
+        "server": server,
+        "alliance": alliance,
+        "unlocked": unlocked,
+        "defenders": []
+    }
     supabase.table("users").insert(payload).execute()
 
 def login(user, pwd):
@@ -40,73 +61,158 @@ def login(user, pwd):
         return resp.data[0]
     return None
 
-# ─── NAVIGATION ────────────────────────────────────────────────────────────────
+def get_eligible_defenders():
+    return [d["name"].strip() for d in supabase.table("defenders").select("name").execute().data]
+
+def get_recent_picks(days=DAYS_LIMIT):
+    cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    result = supabase.table("picks").select("*").gte("picked_on", cutoff).execute()
+    return {row["name"].strip().lower() for row in result.data} if result.data else set()
+
+def insert_pick(name, role):
+    supabase.table("picks").insert({
+        "name": name,
+        "role": role,
+        "picked_on": datetime.utcnow().isoformat()
+    }).execute()
+
+# ─── STATE ───
 if "page" not in st.session_state:
     st.session_state.page = "Login"
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# Always show status
-status = "Connected" if health_check() else "Disconnected"
-st.sidebar.markdown(f"**🔗 Supabase:** {status}")
+# ─── CONNECTION STATUS ───
+st.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnected'}")
 
-# Menu when logged in
+# ─── SIDEBAR NAVIGATION ───
 if st.session_state.user:
-    st.sidebar.header("📑 Menu")
-    st.session_state.page = st.sidebar.radio("Go to", ["Profile", "Random Picker", "Eligible Defenders"] )
-else:
-    st.sidebar.header("👤 Account")
-    st.session_state.page = st.sidebar.radio("Go to", ["Login", "Create Account"] )
+    menu = st.sidebar.radio("📱 Navigation", ["Profile", "Eligible Defenders", "Random Picker", "Log Out"])
+    if menu == "Log Out":
+        st.session_state.clear()
+        st.session_state.page = "Login"
+        st.rerun()
+    else:
+        st.session_state.page = menu
 
-# ─── PAGE: LOGIN ───────────────────────────────────────────────────────────────
+# ─── LOGIN PAGE ───
 if st.session_state.page == "Login":
-    st.title("🔐 Login")
-    uname = st.text_input("Username", key="l_user")
-    pwd = st.text_input("Password", type="password", key="l_pwd")
-    if st.button("Log In"):
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown('<h1>Last War Train Picker</h1>', unsafe_allow_html=True)
+    uname = st.text_input("Username", placeholder="you@example.com")
+    pwd = st.text_input("Password", type="password", placeholder="••••••")
+    col1, col2 = st.columns(2)
+    if col1.button("Log In"):
         user = login(uname, pwd)
         if user:
             st.session_state.user = user
-            st.success("Logged in!")
+            st.session_state.page = "Profile"
+            st.rerun()
         else:
             st.error("Invalid credentials")
+    col2.button("Create Account", on_click=lambda: st.session_state.__setitem__("page", "Create Account"), key="create_account_login")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ─── PAGE: CREATE ACCOUNT ─────────────────────────────────────────────────────
+# ─── CREATE ACCOUNT PAGE ───
 elif st.session_state.page == "Create Account":
-    st.title("🆕 Create Account")
-    new_u = st.text_input("New Username", key="c_user")
-    new_p = st.text_input("New Password", type="password", key="c_pwd")
-    confirm = st.text_input("Confirm Password", type="password", key="c_conf")
-    srv = st.text_input("Server Number")
-    ally = st.text_input("Alliance Name")
-    unlocked = st.checkbox("VIP slot unlocked?", key="c_unlocked")
-    if st.button("Sign Up"):
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown('<h1>Create Account</h1>', unsafe_allow_html=True)
+    new_u = st.text_input("New Username", placeholder="you@example.com")
+    new_p = st.text_input("New Password", type="password", placeholder="••••••")
+    confirm = st.text_input("Confirm Password", type="password", placeholder="••••••")
+    srv = st.text_input("Server Number", placeholder="e.g., 42")
+    ally = st.text_input("Alliance Name", placeholder="Your Alliance")
+    unlocked = st.checkbox("VIP slot unlocked?")
+    col1, col2 = st.columns(2)
+    if col1.button("Sign Up", key="sign_up_button"):
         if not new_u or new_p != confirm or not srv or not ally:
             st.error("Fill all fields and match passwords.")
         else:
             signup(new_u, new_p, srv, ally, unlocked)
-            st.success("Account created! Please login.")
+            st.success("Account created! Please log in.")
+            st.session_state.page = "Login"
+            st.rerun()
+    col2.button("Back to Login", on_click=lambda: st.session_state.__setitem__("page", "Login"), key="back_to_login")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ─── PAGE: PROFILE ─────────────────────────────────────────────────────────────
+# ─── PROFILE PAGE ───
 elif st.session_state.page == "Profile":
     user = st.session_state.user
-    st.title(f"👤 Profile: {user['username']}")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown(f"<h1>Welcome, {user['username']}!</h1>", unsafe_allow_html=True)
     st.markdown(f"**Server:** {user['server']}")
     st.markdown(f"**Alliance:** {user['alliance']}")
-    st.markdown(f"**VIP Unlocked:** {user['unlocked']} ")
+    st.markdown(f"**VIP Unlocked:** {'Yes' if user['unlocked'] else 'No'}")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ─── PAGE: RANDOM PICKER ────────────────────────────────────────────────────────
+# ─── RANDOM PICKER PAGE ───
 elif st.session_state.page == "Random Picker":
-    st.title("🎲 Random Picker")
-    # Placeholder
-    st.info("VS/Tech input and random selection will go here.")
+    st.title("🌟 VIP & Conductor Picker")
+    user_input = st.text_area("Paste up to 20 contestant names (one per line):")
+    contestants = [n.strip() for n in user_input.strip().split("\n") if n.strip()]
+    if st.button("Pick Random VIP & Conductor"):
+        if not contestants:
+            st.warning("Please enter at least one contestant.")
+            st.stop()
+        eligible_defenders = get_eligible_defenders()
+        recent_picks = get_recent_picks()
+        defenders_pool = [d for d in eligible_defenders if d.lower() not in recent_picks]
+        contestants_pool = [c for c in contestants if c.lower() not in recent_picks]
+        if not defenders_pool:
+            st.error("No eligible defenders available who haven't been picked in the last 7 days.")
+            st.stop()
+        if not contestants_pool:
+            st.error("No eligible contestants available who haven't been picked in the last 7 days.")
+            st.stop()
+        attempts = 0
+        max_attempts = 10
+        while attempts < max_attempts:
+            defender = random.choice(defenders_pool)
+            contestant = random.choice(contestants_pool)
+            if defender.lower() != contestant.lower():
+                break
+            attempts += 1
+        else:
+            st.error("Failed to find two different names after multiple attempts.")
+            st.stop()
+        insert_pick(defender, "defender")
+        insert_pick(contestant, "contestant")
+        st.success(f"🛡️ Defender Pick: **{defender}**")
+        st.success(f"🚂 Contestant Pick: **{contestant}**")
 
-# ─── PAGE: ELIGIBLE DEFENDERS ───────────────────────────────────────────────────
+# ─── ELIGIBLE DEFENDERS PAGE ───
 elif st.session_state.page == "Eligible Defenders":
-    st.title("🛡️ Eligible Defenders")
     user = st.session_state.user
-    defenders = user.get("defenders", [])
+    st.title("🛡️ Eligible Defenders")
+    st.markdown("### ➕ Add a New Defender")
+    with st.form("add_defender_form"):
+        name = st.text_input("Defender Name", placeholder="e.g. WarDaddy42")
+        hq_level = st.number_input("HQ Level", min_value=1, max_value=35, step=1)
+        submitted = st.form_submit_button("Add Defender")
+        if submitted:
+            if not name:
+                st.warning("Please enter a name.")
+            else:
+                supabase.table("defenders").insert({
+                    "name": name,
+                    "hq_level": hq_level,
+                    "user_id": user["id"]
+                }).execute()
+                st.success(f"{name} added successfully!")
+                st.rerun()
+    st.divider()
+    st.markdown("### 🢍 Current Defenders")
+    response = supabase.table("defenders").select("*").eq("user_id", user["id"]).order("created_at", desc=False).execute()
+    defenders = response.data
     if defenders:
-        st.write(defenders)
+        for d in defenders:
+            col1, col2 = st.columns([6, 1])
+            with col1:
+                st.markdown(f"**{d['name']}** | HQ: {d['hq_level']} | Added: {d['created_at'].split('T')[0]}")
+            with col2:
+                if st.button("❌", key=f"delete_{d['id']}"):
+                    supabase.table("defenders").delete().eq("id", d["id"]).execute()
+                    st.success(f"{d['name']} deleted.")
+                    st.rerun()
     else:
-        st.info("No defenders configured.")
+        st.info("No defenders added yet.")
