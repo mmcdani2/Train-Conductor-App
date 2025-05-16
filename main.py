@@ -59,9 +59,20 @@ st.markdown("""
       gap: 1rem;
       box-shadow: 2px 0 10px rgba(0,0,0,0.5);
   }
-  [data-testid="stSidebar"] {
-      display: none !important;
-  }
+  /* Fully disable sidebar rendering and interaction */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebarNav"],
+    [data-testid="stSidebarContent"],
+    section[data-testid="stSidebar"],
+    header[data-testid="stHeader"] {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        max-width: 0 !important;
+        min-width: 0 !important;
+        pointer-events: none !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
