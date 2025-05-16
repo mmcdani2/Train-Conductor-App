@@ -19,8 +19,6 @@ def profile_page():
         st.session_state.user["unlocked"] = vip_toggle
         st.success("VIP setting updated. Please refresh or navigate to see changes.")
 
-    st.warning("DEBUG: Reached help section.")
-
     how_to_text = """
 ### 📖 How to Use This App
 
@@ -45,6 +43,7 @@ def profile_page():
 """
 
     try:
-        st.markdown(how_to_text)
+        with st.expander("📖 How to Use This App", expanded=False):
+            st.markdown(how_to_text)
     except Exception as e:
         st.error(f"Help section failed: {e}")
