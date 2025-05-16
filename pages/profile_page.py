@@ -27,7 +27,7 @@ def profile_page():
 - Navigate to: **Profile**, **Eligible Defenders** (if VIP is unlocked), **Random Picker**, or **Log Out**
 
 **Random Picker**
-- Paste up to 20 names (one per line)
+- Paste up to 20 names (one per line) it is common to use top 10 VS daily scores and top 10 weekly tech donators
 - The app selects 1 contestant and 1 eligible defender (if VIP is unlocked), otherwise it only selects 1 contestant
 - Prevents people from being picked if they were chosen in the last 7 days
 
