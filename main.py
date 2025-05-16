@@ -1,7 +1,7 @@
 import streamlit as st
 from dotenv import load_dotenv
 from styles import apply_styles
-from utils.state import init_session_state, toggle_menu
+from utils.state import init_session_state
 from db.auth import login
 from pages.login_page import login_page, create_account_page
 from pages.profile_page import profile_page
@@ -9,64 +9,30 @@ from pages.defenders_page import defenders_page
 from pages.picker_page import picker_page
 
 # ─── HEADER ───
-st.set_page_config(
-    page_title="Last War Train Picker",
-    page_icon="⚔️",
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="Last War Train Picker", page_icon="⚔️", layout="centered")
 
 # ─── INITIAL SETUP ───
 load_dotenv()
 apply_styles()
 init_session_state()
 
-# ─── CUSTOM SIDEBAR LIMITATION CSS ───
-st.markdown("""
-<style>
-  [data-testid="stSidebar"] {
-    max-width: 5px !important;
-    min-width: 0 !important;
-    width: 0 !important;
-    overflow: hidden !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-  }
-  [data-testid="stSidebar"] * {
-    opacity: 0 !important;
-    pointer-events: none !important;
-  }
-</style>
-""", unsafe_allow_html=True)
-
 # ─── CONNECTION STATUS ───
 from db.auth import health_check
-st.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnected'}")
+st.sidebar.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnected'}")
 
-# ─── HAMBURGER NAVIGATION ───
+# ─── SIDEBAR NAVIGATION ───
 if st.session_state.user:
-    if st.button("≡ Menu", key="custom_hamburger", on_click=toggle_menu):
-        pass
-
-    if st.session_state.show_menu:
-        st.markdown('<div class="menu">', unsafe_allow_html=True)
-        if st.button("👤 Profile"):
-            st.session_state.page = "Profile"
-            st.session_state.show_menu = False
-            st.rerun()
-        if st.session_state.user.get("unlocked") and st.button("🛡️ Eligible Defenders"):
-            st.session_state.page = "Eligible Defenders"
-            st.session_state.show_menu = False
-            st.rerun()
-        if st.button("🎲 Random Picker"):
-            st.session_state.page = "Random Picker"
-            st.session_state.show_menu = False
-            st.rerun()
-        if st.button("🚪 Log Out"):
-            st.session_state.clear()
-            st.session_state.page = "Login"
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.sidebar.title("Navigation")
+    if st.sidebar.button("👤 Profile"):
+        st.session_state.page = "Profile"
+    if st.session_state.user.get("unlocked") and st.sidebar.button("🛡️ Eligible Defenders"):
+        st.session_state.page = "Eligible Defenders"
+    if st.sidebar.button("🎲 Random Picker"):
+        st.session_state.page = "Random Picker"
+    if st.sidebar.button("🚪 Log Out"):
+        st.session_state.clear()
+        st.session_state.page = "Login"
+        st.rerun()
 
 # ─── PAGE ROUTING ───
 page = st.session_state.page
