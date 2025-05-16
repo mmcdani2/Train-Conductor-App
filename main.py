@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 from styles import apply_styles
 from utils.state import init_session_state, toggle_menu
 from db.auth import login
-from pages import login_page, create_account_page, profile_page, defenders_page, picker_page
+from pages.login_page import login_page, create_account_page
+
 
 # ─── INITIAL SETUP ───
 load_dotenv()
