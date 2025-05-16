@@ -63,7 +63,16 @@ def login(user, pwd):
     return None
 
 def get_eligible_defenders(alliance):
-    return [m["name"] for m in supabase.table("team_roster").select("name, eligible").eq("alliance", alliance).eq("eligible", True).execute().data].strip() for d in supabase.table("defenders").select("name").eq("alliance", alliance).execute().data]
+    return [
+        m["name"]
+        for m in supabase
+        .table("team_roster")
+        .select("name, eligible")
+        .eq("alliance", alliance)
+        .eq("eligible", True)
+        .execute()
+        .data
+    ] for m in supabase.table("team_roster").select("name, eligible").eq("alliance", alliance).eq("eligible", True).execute().data].strip() for d in supabase.table("defenders").select("name").eq("alliance", alliance).execute().data]
 
 def get_recent_picks(days=DAYS_LIMIT):
     cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
