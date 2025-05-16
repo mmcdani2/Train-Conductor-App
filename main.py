@@ -21,6 +21,24 @@ load_dotenv()
 apply_styles()
 init_session_state()
 
+# ─── CUSTOM SIDEBAR LIMITATION CSS ───
+st.markdown("""
+<style>
+  [data-testid="stSidebar"] {
+    max-width: 5px !important;
+    min-width: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+  }
+  [data-testid="stSidebar"] * {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+</style>
+""", unsafe_allow_html=True)
+
 # ─── CONNECTION STATUS ───
 from db.auth import health_check
 st.markdown(f"**🔗 Supabase:** {'Connected' if health_check() else 'Disconnected'}")
