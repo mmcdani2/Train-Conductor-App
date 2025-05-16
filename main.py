@@ -7,6 +7,7 @@ from pages.login_page import login_page, create_account_page
 from pages.profile_page import profile_page
 from pages.defenders_page import defenders_page
 from pages.picker_page import picker_page
+from utils.translate import t
 
 # ─── HEADER ───
 st.set_page_config(page_title="Last War Train Picker", page_icon="⚔️", layout="centered")
@@ -16,67 +17,14 @@ load_dotenv()
 apply_styles()
 init_session_state()
 
-# ─── TRANSLATIONS ───
-translations = {
-    "English": {
-        "profile": "👤 Profile",
-        "eligible_defenders": "🛡️ Eligible Defenders",
-        "random_picker": "🎲 Random Picker",
-        "logout": "🚪 Log Out",
-        "connected": "🔗 Supabase: Connected",
-        "disconnected": "🔗 Supabase: Disconnected",
-        "language": "🌐 Language"
-    },
-    "Spanish": {
-        "profile": "👤 Perfil",
-        "eligible_defenders": "🛡️ Defensores Elegibles",
-        "random_picker": "🎲 Selector Aleatorio",
-        "logout": "🚪 Cerrar Sesión",
-        "connected": "🔗 Supabase: Conectado",
-        "disconnected": "🔗 Supabase: Desconectado",
-        "language": "🌐 Idioma"
-    },
-    "Portuguese": {
-        "profile": "👤 Perfil",
-        "eligible_defenders": "🛡️ Defensores Elegíveis",
-        "random_picker": "🎲 Seletor Aleatório",
-        "logout": "🚪 Sair",
-        "connected": "🔗 Supabase: Conectado",
-        "disconnected": "🔗 Supabase: Desconectado",
-        "language": "🌐 Idioma"
-    },
-    "Korean": {
-        "profile": "👤 프로필",
-        "eligible_defenders": "🛡️ 선택된 수비수",
-        "random_picker": "🎲 무작위 선택기",
-        "logout": "🚪 로그아웃",
-        "connected": "🔗 Supabase: 연결됨",
-        "disconnected": "🔗 Supabase: 연결되지 않음",
-        "language": "🌐 언어"
-    },
-    "Indonesian": {
-        "profile": "👤 Profil",
-        "eligible_defenders": "🛡️ Pembela yang Memenuhi Syarat",
-        "random_picker": "🎲 Pemilih Acak",
-        "logout": "🚪 Keluar",
-        "connected": "🔗 Supabase: Terhubung",
-        "disconnected": "🔗 Supabase: Tidak Terhubung",
-        "language": "🌐 Bahasa"
-    }
-}
-
-def t(key):
-    lang = st.session_state.get("language", "English")
-    return translations.get(lang, translations["English"]).get(key, key)
-
 # ─── LANGUAGE SELECTION ───
 if "language" not in st.session_state:
     st.session_state.language = "English"
 
 st.sidebar.selectbox(
     label=t("language"),
-    options=list(translations.keys()),
-    index=list(translations.keys()).index(st.session_state.language),
+    options=["English", "Spanish", "Portuguese", "Korean", "Indonesian"],
+    index=["English", "Spanish", "Portuguese", "Korean", "Indonesian"].index(st.session_state.language),
     key="language"
 )
 
