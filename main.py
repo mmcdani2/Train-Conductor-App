@@ -99,8 +99,9 @@ if st.session_state.user:
     else:
         st.session_state.page = menu
 
-# ─── LOGIN PAGE ───
-if st.session_state.page == "Login":
+# ─── PAGE ROUTING ───
+page = st.session_state.page
+if page == "Login":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<h1>Last War Train Picker</h1>', unsafe_allow_html=True)
     uname = st.text_input("Username", placeholder="you@example.com")
@@ -117,3 +118,20 @@ if st.session_state.page == "Login":
             st.error("Invalid credentials")
     col2.button("Create Account", on_click=lambda: st.session_state.__setitem__("page", "Create Account"), key="create_account_login")
     st.markdown('</div>', unsafe_allow_html=True)
+
+elif page == "Create Account":
+    ...  # Existing Create Account logic
+
+elif page == "Profile":
+    ...  # Existing Profile page logic
+
+elif page == "Eligible Defenders":
+    ...  # Existing Eligible Defenders page logic
+
+elif page == "Random Picker":
+    ...  # Existing Random Picker page logic
+
+else:
+    st.warning(f"Unknown page: {page}")
+    st.session_state.page = "Login"
+    st.rerun()
