@@ -1,119 +1,42 @@
 import streamlit as st
+from db.auth import login, signup
+from utils.translate import t
 
-translations = {
-    "English": {
-        "app_title": "Last War Train Picker",
-        "username_label": "Username",
-        "username_placeholder": "Last War Username",
-        "password_label": "Password",
-        "login_button": "Log In",
-        "invalid_credentials": "Invalid credentials",
-        "create_account": "Create Account",
-        "create_account_title": "Create Account",
-        "new_username_label": "New Username",
-        "new_password_label": "New Password",
-        "confirm_password_label": "Confirm Password",
-        "server_label": "Server Number",
-        "alliance_label": "Alliance Name",
-        "alliance_placeholder": "Your Alliance",
-        "vip_checkbox": "VIP slot unlocked?",
-        "signup_button": "Sign Up",
-        "fill_fields_error": "Fill all fields and match passwords.",
-        "account_created": "Account created! Please log in.",
-        "back_to_login": "Back to Login"
-    },
-    "Spanish": {
-        "app_title": "Selector de Trenes Last War",
-        "username_label": "Nombre de usuario",
-        "username_placeholder": "Nombre en Last War",
-        "password_label": "Contraseña",
-        "login_button": "Iniciar sesión",
-        "invalid_credentials": "Credenciales inválidas",
-        "create_account": "Crear cuenta",
-        "create_account_title": "Crear cuenta",
-        "new_username_label": "Nuevo nombre de usuario",
-        "new_password_label": "Nueva contraseña",
-        "confirm_password_label": "Confirmar contraseña",
-        "server_label": "Número de servidor",
-        "alliance_label": "Nombre de la alianza",
-        "alliance_placeholder": "Tu alianza",
-        "vip_checkbox": "¿VIP desbloqueado?",
-        "signup_button": "Registrarse",
-        "fill_fields_error": "Completa todos los campos y coincide las contraseñas.",
-        "account_created": "¡Cuenta creada! Por favor inicia sesión.",
-        "back_to_login": "Volver a iniciar sesión"
-    },
-    "Portuguese": {
-        "app_title": "Seletor de Trens Last War",
-        "username_label": "Nome de usuário",
-        "username_placeholder": "Nome no Last War",
-        "password_label": "Senha",
-        "login_button": "Entrar",
-        "invalid_credentials": "Credenciais inválidas",
-        "create_account": "Criar conta",
-        "create_account_title": "Criar conta",
-        "new_username_label": "Novo nome de usuário",
-        "new_password_label": "Nova senha",
-        "confirm_password_label": "Confirmar senha",
-        "server_label": "Número do servidor",
-        "alliance_label": "Nome da aliança",
-        "alliance_placeholder": "Sua aliança",
-        "vip_checkbox": "Slot VIP desbloqueado?",
-        "signup_button": "Registrar",
-        "fill_fields_error": "Preencha todos os campos e combine as senhas.",
-        "account_created": "Conta criada! Por favor, faça login.",
-        "back_to_login": "Voltar ao login"
-    },
-    "Korean": {
-        "app_title": "라스트 워 기차 선택기",
-        "username_label": "사용자 이름",
-        "username_placeholder": "Last War 사용자 이름",
-        "password_label": "비밀번호",
-        "login_button": "로그인",
-        "invalid_credentials": "잘못된 자격 증명",
-        "create_account": "계정 만들기",
-        "create_account_title": "계정 만들기",
-        "new_username_label": "새 사용자 이름",
-        "new_password_label": "새 비밀번호",
-        "confirm_password_label": "비밀번호 확인",
-        "server_label": "서버 번호",
-        "alliance_label": "동맹 이름",
-        "alliance_placeholder": "당신의 동맹",
-        "vip_checkbox": "VIP 슬롯 해제됨?",
-        "signup_button": "가입하기",
-        "fill_fields_error": "모든 필드를 채우고 비밀번호를 일치시켜주세요.",
-        "account_created": "계정이 생성되었습니다! 로그인해주세요.",
-        "back_to_login": "로그인으로 돌아가기"
-    },
-    "Indonesian": {
-        "app_title": "Pemilih Kereta Last War",
-        "username_label": "Nama pengguna",
-        "username_placeholder": "Nama pengguna Last War",
-        "password_label": "Kata sandi",
-        "login_button": "Masuk",
-        "invalid_credentials": "Kredensial tidak valid",
-        "create_account": "Buat akun",
-        "create_account_title": "Buat akun",
-        "new_username_label": "Nama pengguna baru",
-        "new_password_label": "Kata sandi baru",
-        "confirm_password_label": "Konfirmasi kata sandi",
-        "server_label": "Nomor server",
-        "alliance_label": "Nama aliansi",
-        "alliance_placeholder": "Aliansi Anda",
-        "vip_checkbox": "Slot VIP dibuka?",
-        "signup_button": "Daftar",
-        "fill_fields_error": "Isi semua kolom dan cocokkan kata sandi.",
-        "account_created": "Akun berhasil dibuat! Silakan masuk.",
-        "back_to_login": "Kembali ke login"
-    }
-}
+def login_page():
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown(f'<h1>{t("app_title")}</h1>', unsafe_allow_html=True)
+    uname = st.text_input(t("username_label"), placeholder=t("username_placeholder"))
+    pwd = st.text_input(t("password_label"), type="password", placeholder="••••••")
+    col1, col2 = st.columns(2)
+    if col1.button(t("login_button")):
+        user = login(uname, pwd)
+        if user:
+            st.session_state.user = user
+            st.session_state.page = "Profile"
+            st.session_state.alliance = user["alliance"]
+            st.rerun()
+        else:
+            st.error(t("invalid_credentials"))
+    col2.button(t("create_account"), on_click=lambda: st.session_state.__setitem__("page", "Create Account"), key="create_account_login")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-def t(key):
-    prev_lang = st.session_state.get("language", "English")
-    if "language" not in st.session_state:
-        st.session_state.language = prev_lang
-    lang = st.session_state.language
-    return translations.get(lang, translations["English"]).get(key, key)
-
-    lang = st.session_state.get("language", "English")
-    return translations.get(lang, translations["English"]).get(key, key)
+def create_account_page():
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown(f'<h1>{t("create_account_title")}</h1>', unsafe_allow_html=True)
+    new_u = st.text_input(t("new_username_label"), placeholder=t("username_placeholder"))
+    new_p = st.text_input(t("new_password_label"), type="password", placeholder="••••••")
+    confirm = st.text_input(t("confirm_password_label"), type="password", placeholder="••••••")
+    srv = st.text_input(t("server_label"), placeholder="e.g., 42")
+    ally = st.text_input(t("alliance_label"), placeholder=t("alliance_placeholder"))
+    unlocked = st.checkbox(t("vip_checkbox"))
+    col1, col2 = st.columns(2)
+    if col1.button(t("signup_button"), key="sign_up_button"):
+        if not new_u or new_p != confirm or not srv or not ally:
+            st.error(t("fill_fields_error"))
+        else:
+            signup(new_u, new_p, srv, ally, unlocked)
+            st.success(t("account_created"))
+            st.session_state.page = "Login"
+            st.rerun()
+    col2.button(t("back_to_login"), on_click=lambda: st.session_state.__setitem__("page", "Login"), key="back_to_login")
+    st.markdown('</div>', unsafe_allow_html=True)
